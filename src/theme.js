@@ -12,10 +12,11 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: "#f4f4f4",
+          backgroundColor: "#e0e0e0",
           margin: 0,
           padding: 0,
           fontFamily: "'Roboto', sans-serif",
+          minHeight: "100vh",
         },
       },
     },
