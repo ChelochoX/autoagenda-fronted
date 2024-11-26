@@ -1,7 +1,9 @@
 import React from "react";
-import { List, ListItem, ListItemText, Typography, Box } from "@mui/material";
+import { List, ListItem, ListItemText, Typography, IconButton, Box } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit"; // Ícono de Modificar
+import DeleteIcon from "@mui/icons-material/Delete"; // Ícono de Eliminar
 
-const DetalleAgendamiento = ({ citas }) => {
+const DetalleAgendamiento = ({ citas, onCancelar, onModificar }) => {
   const getColorByEstado = (estado) => {
     switch (estado) {
       case "pendiente":
@@ -11,7 +13,7 @@ const DetalleAgendamiento = ({ citas }) => {
       case "rechazado":
         return "#f28b82"; // Rojo claro
       default:
-        return "#ddd"; // Color por defecto (gris claro)
+        return "#ddd"; // Gris claro
     }
   };
 
@@ -61,8 +63,12 @@ const DetalleAgendamiento = ({ citas }) => {
                   borderRadius: "5px",
                   marginBottom: "8px",
                   boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
+                {/* Información de la cita */}
                 <ListItemText
                   primary={
                     <Typography
@@ -78,6 +84,26 @@ const DetalleAgendamiento = ({ citas }) => {
                     </Typography>
                   }
                 />
+
+                {/* Botones de acción */}
+                <Box>
+                  {/* Botón de Modificar */}
+                  <IconButton
+                    aria-label="modificar"
+                    onClick={() => onModificar(cita)}
+                    sx={{ color: "white", marginRight: 1 }}
+                  >
+                    <EditIcon />
+                  </IconButton>
+                  {/* Botón de Eliminar */}
+                  <IconButton
+                    aria-label="eliminar"
+                    onClick={() => onCancelar(cita)}
+                    sx={{ color: "white" }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
               </ListItem>
             ))}
           </List>

@@ -3,6 +3,7 @@ import { Grid, Box, Typography } from "@mui/material";
 import Calendario from "../Componentes/Calendario";
 import DetalleAgendamiento from "../Componentes/DetalleAgendamiento";
 import LeyendaEstados from "../Componentes/LeyendaEstados";
+import AccionesReservas from "../Componentes/AccionesReservas";
 
 const Agendamiento = () => {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
@@ -50,6 +51,7 @@ const Agendamiento = () => {
           <Calendario onDateChange={manejarCambioDeFecha} />
           {/* Leyenda de Estados */}
           <LeyendaEstados />
+          <AccionesReservas />
         </Grid>
         {/* Columna de Detalles del Agendamiento */}
         <Grid item xs={12} md={8}>
