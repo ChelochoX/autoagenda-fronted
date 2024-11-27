@@ -1,9 +1,22 @@
 import React from "react";
-import { List, ListItem, ListItemText, Typography, IconButton, Box } from "@mui/material";
+import {
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
+  IconButton,
+  Box,
+} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit"; // Ícono de Modificar
 import DeleteIcon from "@mui/icons-material/Delete"; // Ícono de Eliminar
+import VisibilityIcon from "@mui/icons-material/Visibility"; // Ícono de Visualizar
 
-const DetalleAgendamiento = ({ citas, onCancelar, onModificar }) => {
+const DetalleAgendamiento = ({
+  citas,
+  onCancelar,
+  onModificar,
+  onVisualizar,
+}) => {
   const getColorByEstado = (estado) => {
     switch (estado) {
       case "pendiente":
@@ -87,6 +100,15 @@ const DetalleAgendamiento = ({ citas, onCancelar, onModificar }) => {
 
                 {/* Botones de acción */}
                 <Box>
+                  {/* Botón de Visualizar */}
+                  <IconButton
+                    aria-label="visualizar"
+                    onClick={() => onVisualizar(cita)}
+                    sx={{ color: "white", marginRight: 1 }}
+                  >
+                    <VisibilityIcon />
+                  </IconButton>
+
                   {/* Botón de Modificar */}
                   <IconButton
                     aria-label="modificar"
@@ -95,6 +117,7 @@ const DetalleAgendamiento = ({ citas, onCancelar, onModificar }) => {
                   >
                     <EditIcon />
                   </IconButton>
+
                   {/* Botón de Eliminar */}
                   <IconButton
                     aria-label="eliminar"

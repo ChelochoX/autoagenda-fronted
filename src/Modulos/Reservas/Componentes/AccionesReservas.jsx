@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Button } from "@mui/material";
 
-const AccionesReservas = () => {
+const AccionesReservas = ({ onReservar }) => {
   return (
     <Box
       sx={{
@@ -9,10 +9,10 @@ const AccionesReservas = () => {
         padding: 2,
         border: "1px solid #ddd",
         borderRadius: "8px",
-        backgroundColor: "#f4f4f4", // Fondo gris claro
+        backgroundColor: "#f4f4f4",
         display: "flex",
         flexDirection: "column",
-        gap: 2, // Espaciado entre botones
+        gap: 2,
       }}
     >
       {/* Botón Reservar */}
@@ -20,7 +20,7 @@ const AccionesReservas = () => {
         variant="contained"
         color="primary"
         sx={{ fontWeight: "bold" }}
-        onClick={() => alert("Funcionalidad para reservar próximamente")}
+        onClick={onReservar} // Usar la prop correctamente
       >
         Reservar
       </Button>
@@ -30,7 +30,9 @@ const AccionesReservas = () => {
         variant="outlined"
         color="secondary"
         sx={{ fontWeight: "bold" }}
-        onClick={() => alert("Funcionalidad para solicitar presupuesto próximamente")}
+        onClick={() =>
+          alert("Funcionalidad para solicitar presupuesto próximamente")
+        }
       >
         Solicitar Presupuesto
       </Button>
