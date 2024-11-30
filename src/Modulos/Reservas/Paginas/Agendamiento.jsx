@@ -5,10 +5,13 @@ import DetalleAgendamiento from "../Componentes/DetalleAgendamiento";
 import LeyendaEstados from "../Componentes/LeyendaEstados";
 import AccionesReservas from "../Componentes/AccionesReservas";
 import ModalReservar from "../Componentes/ModalReservar";
+import dayjs from "dayjs";
 
 const Agendamiento = () => {
   const [modalOpen, setModalOpen] = useState(false); // Control del modal
-  const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(
+    dayjs().format("YYYY-MM-DD")
+  ); // Fecha inicial
 
   const citasPorFecha = {
     "2024-11-26": [
@@ -24,17 +27,19 @@ const Agendamiento = () => {
         descripcion: "Alineación de ruedas y balanceo",
         estado: "aprobado",
       },
-      // Más citas...
     ],
   };
 
   const manejarCambioDeFecha = (nuevaFecha) => {
-    setFechaSeleccionada(nuevaFecha ? nuevaFecha.format("YYYY-MM-DD") : null);
+    setFechaSeleccionada(
+      nuevaFecha
+        ? nuevaFecha.format("YYYY-MM-DD")
+        : dayjs().format("YYYY-MM-DD")
+    );
   };
 
   const guardarCita = (nuevaCita) => {
     console.log("Nueva cita creada:", nuevaCita);
-    // Aquí puedes agregar lógica para enviar la cita al backend o actualizar el estado
     setModalOpen(false); // Cierra el modal
   };
 
@@ -49,24 +54,24 @@ const Agendamiento = () => {
         Agendamiento de Mantenimiento
       </Typography>
       <Grid container spacing={2}>
-        {/* Columna del Calendario */}
         <Grid item xs={12} md={4}>
-          <Calendario onDateChange={manejarCambioDeFecha} />
+          <Calendario
+            value={dayjs(fechaSeleccionada)} // Pasar la fecha seleccionada al calendario
+            manejarCambioDeFecha={manejarCambioDeFecha}
+          />
           <LeyendaEstados />
           <AccionesReservas onReservar={() => setModalOpen(true)} />{" "}
-          {/* Pasamos la función */}
         </Grid>
-        {/* Columna de Detalles del Agendamiento */}
         <Grid item xs={12} md={8}>
           <DetalleAgendamiento citas={citas} />
         </Grid>
       </Grid>
 
-      {/* Modal para reservar */}
       <ModalReservar
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onGuardar={guardarCita}
+        selectedDate={dayjs(fechaSeleccionada)}
       />
     </Box>
   );
