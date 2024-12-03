@@ -94,7 +94,7 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
     const nuevaCita = {
       id_vehiculo: vehiculo,
       fecha: fecha ? fecha.format("YYYY-MM-DD") : "",
-      hora: hora ? hora.format("HH:mm") : null, // Convertimos `hora` a string en formato "HH:mm"
+      hora: hora ? hora.format("HH:mm") : null,
       id_tipo_servicio: servicio,
       descripcion,
       estado: "pendiente",

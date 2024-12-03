@@ -6,7 +6,7 @@ const theme = createTheme({
     secondary: { main: "#dc004e" },
   },
   typography: {
-    fontFamily: "'Roboto', sans-serif",
+    fontFamily: "'Poppins', sans-serif",
   },
   components: {
     MuiCssBaseline: {
@@ -15,7 +15,7 @@ const theme = createTheme({
           backgroundColor: "#e0e0e0",
           margin: 0,
           padding: 0,
-          fontFamily: "'Roboto', sans-serif",
+          fontFamily: "'Poppins', sans-serif",
           minHeight: "100vh",
         },
       },
