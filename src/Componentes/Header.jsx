@@ -14,7 +14,8 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import login from "../Assets/iconos/login.png"; // Imagen de login
+import login from "../Assets/iconos/login.png";
+import logo from "../Assets/imagenes/logomecanic.jpg"; // Imagen del logo
 import MenuIcon from "@mui/icons-material/Menu";
 
 const Header = () => {
@@ -46,8 +47,10 @@ const Header = () => {
   ];
 
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [openMenu, setOpenMenu] = React.useState(false);
   const open = Boolean(anchorEl);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // Detecta si es móvil
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -57,36 +60,33 @@ const Header = () => {
     setAnchorEl(null);
   };
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  // Manejo del Drawer en dispositivos móviles
-  const toggleDrawer = (open) => () => {
-    setDrawerOpen(open);
-  };
-
-  // Cerrar el menú después de hacer clic en un enlace en modo móvil
-  const handleLinkClick = () => {
-    setDrawerOpen(false);
+  const handleDrawerToggle = () => {
+    setOpenMenu(!openMenu);
   };
 
   return (
     <AppBar
       position="sticky"
-      sx={{ backgroundColor: "#f5f5f5", padding: "10px 20px" }}
+      sx={{
+        backgroundColor: "#b0b0b0", // Fondo más oscuro (gris claro oscuro)
+        padding: "10px 20px",
+      }}
     >
       <Toolbar sx={{ justifyContent: "space-between" }}>
         {/* Logo en la esquina izquierda */}
         <Box>
           <img
-            src={"logo"} // Reemplaza con la ruta de tu logo
+            src={logo}
             alt="Logo Empresa"
-            style={{ height: "40px", cursor: "pointer" }}
+            style={{
+              height: isMobile ? "40px" : "80px", // Ajusta la altura según el dispositivo
+              cursor: "pointer",
+            }}
           />
         </Box>
 
-        {/* Menú en dispositivos grandes */}
-        {!isMobile ? (
+        {/* Menú de enlaces (escritorio) */}
+        {!isMobile && (
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {links.map((link, index) => (
               <Button
@@ -97,7 +97,7 @@ const Header = () => {
                   position: "relative",
                   margin: "0 20px",
                   color: "#000", // Negro para mejor legibilidad
-                  fontSize: "1.5rem", // Tamaño de letra más grande
+                  fontSize: "1rem", // Reducido el tamaño de letra
                   textTransform: "uppercase",
                   fontWeight: "normal", // Sin negrita
                   letterSpacing: "0.1em",
@@ -122,17 +122,6 @@ const Header = () => {
               </Button>
             ))}
           </Box>
-        ) : (
-          // Icono de menú hamburguesa en dispositivos móviles
-          <IconButton
-            color="inherit"
-            aria-label="open menu"
-            edge="start"
-            onClick={toggleDrawer(true)}
-            sx={{ display: { md: "none" } }}
-          >
-            <MenuIcon />
-          </IconButton>
         )}
 
         {/* Icono de Usuario con Efecto Hover */}
@@ -147,15 +136,15 @@ const Header = () => {
             sx={{ color: "#000" }}
           >
             <img
-              src={login} // Aquí colocas la imagen login.png
+              src={login}
               alt="Login"
               style={{
-                width: "2rem", // Ajusta el tamaño según sea necesario
-                height: "2rem", // Ajusta el tamaño según sea necesario
-                borderRadius: "50%", // Borde redondeado (círculo)
-                border: "2px solid transparent", // Inicialmente sin borde visible
-                padding: "2px", // Espaciado interno entre la imagen y el borde
-                transition: "all 0.3s ease", // Animación suave
+                width: "2rem",
+                height: "2rem",
+                borderRadius: "50%",
+                border: "2px solid transparent",
+                padding: "2px",
+                transition: "all 0.3s ease",
               }}
               className="login-icon"
             />
@@ -179,29 +168,42 @@ const Header = () => {
             <MenuItem onClick={handleMenuClose}>Registrar</MenuItem>
           </Menu>
         </Box>
+
+        {/* Icono del Menú Hamburguesa (para móviles) */}
+        {isMobile && (
+          <IconButton
+            size="large"
+            edge="end"
+            aria-label="menu"
+            onClick={handleDrawerToggle}
+            sx={{
+              color: "#fff", // Hacemos el icono blanco para que resalte sobre el fondo oscuro
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
       </Toolbar>
 
-      {/* Drawer (Menú lateral) para móvil */}
-      <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
-        <List>
-          {links.map((link, index) => (
-            <ListItem
-              button
-              key={index}
-              component={Link}
-              to={link.path}
-              onClick={handleLinkClick}
-            >
-              <Button
+      {/* Menú lateral para dispositivos móviles */}
+      {isMobile && (
+        <Drawer anchor="right" open={openMenu} onClose={handleDrawerToggle}>
+          <List sx={{ paddingTop: "20px", paddingBottom: "20px" }}>
+            {links.map((link, index) => (
+              <ListItem
+                key={index}
+                button
+                component={Link}
+                to={link.path}
+                onClick={() => {
+                  handleDrawerToggle(); // Cierra el menú al hacer clic en un enlace
+                }}
                 sx={{
-                  width: "100%",
-                  textTransform: "uppercase",
-                  fontWeight: "normal", // Sin negrita
-                  letterSpacing: "0.1em",
-                  color: "#000",
+                  padding: "10px 20px",
+                  fontSize: "1rem", // Tamaño más pequeño para los enlaces en móvil
+                  textAlign: "center",
                   position: "relative",
-                  margin: "10px 0",
-                  fontSize: "1rem",
+                  color: "#000",
                   "&::before": {
                     content: '""',
                     position: "absolute",
@@ -210,21 +212,21 @@ const Header = () => {
                     width: "100%",
                     height: "100%",
                     backgroundColor: link.color,
-                    clipPath: link.shape, // Forma dinámica
+                    clipPath: link.shape,
                     zIndex: -1,
                     transition: "all 0.3s ease",
                   },
                   "&:hover::before": {
-                    transform: "scale(1.1)", // Efecto hover
+                    transform: "scale(1.1)",
                   },
                 }}
               >
                 {link.name}
-              </Button>
-            </ListItem>
-          ))}
-        </List>
-      </Drawer>
+              </ListItem>
+            ))}
+          </List>
+        </Drawer>
+      )}
     </AppBar>
   );
 };
