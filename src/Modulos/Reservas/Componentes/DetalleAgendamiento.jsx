@@ -88,13 +88,19 @@ const DetalleAgendamiento = ({
                       variant="subtitle1"
                       sx={{ color: "white", fontWeight: "bold" }} // Texto blanco para mejor contraste
                     >
-                      {cita.hora} - {cita.titulo}
+                      Hora: {cita.hora} - Modelo: {cita.marca} {cita.modelo} (
+                      {cita.anho})
                     </Typography>
                   }
                   secondary={
-                    <Typography variant="body2" sx={{ color: "white" }}>
-                      {cita.descripcion}
-                    </Typography>
+                    <>
+                      <Typography variant="body2" sx={{ color: "white" }}>
+                        Placa: {cita.placa}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: "white" }}>
+                        Descripción: {cita.descripcion}
+                      </Typography>
+                    </>
                   }
                 />
 
