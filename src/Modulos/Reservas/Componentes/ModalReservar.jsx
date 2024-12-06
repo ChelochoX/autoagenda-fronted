@@ -90,26 +90,118 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
     }
   }, [marcaSeleccionada]);
 
-  const guardarCita = () => {
-    const nuevaCita = {
-      id_vehiculo: vehiculo,
-      fecha: fecha ? fecha.format("YYYY-MM-DD") : "",
-      hora: hora ? hora.format("HH:mm") : null,
-      id_tipo_servicio: servicio,
-      descripcion,
-      estado: "pendiente",
-      marca: marcaSeleccionada,
-      modelo: modeloSeleccionado,
-      anho: anhoSeleccionado,
+  // Guardamos la Cita ingresada por el usuario
+  const guardarCita = async () => {
+    // Validar si los campos obligatorios están llenos
+    if (
+      !marcaSeleccionada ||
+      !modeloSeleccionado ||
+      !anhoSeleccionado ||
+      !fecha ||
+      !hora ||
+      !servicio
+    ) {
+      alert("Por favor, complete todos los campos.");
+      return;
+    }
+
+    // Crear el objeto del vehículo
+    const nuevoVehiculo = {
+      idMarca: marcaSeleccionada,
+      idModelo: modeloSeleccionado,
+      idAnho: anhoSeleccionado,
+      placa: "SIN-PLACA",
     };
 
-    onGuardar(nuevaCita);
-    onClose();
+    try {
+      // Paso 1: Insertar el vehículo
+      const vehiculoResponse = await fetch(
+        "https://localhost:7050/api/Vehiculos/crear",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(nuevoVehiculo),
+        }
+      );
+
+      const vehiculoData = await vehiculoResponse.json();
+      if (!vehiculoResponse.ok) {
+        throw new Error(vehiculoData.mensaje || "Error al guardar el vehículo");
+      }
+
+      const idVehiculo = vehiculoData.idVehiculo;
+
+      // Crear el objeto de la cita
+      const nuevaCita = {
+        IdVehiculo: idVehiculo,
+        Fecha: fecha ? fecha.format("YYYY-MM-DD") : "",
+        Hora: hora ? hora.format("HH:mm") : "",
+        IdTipoServicio: servicio,
+        Descripcion: descripcion,
+        Estado: "pendiente",
+        IdCliente: 1,
+      };
+
+      // Paso 2: Insertar la cita
+      const citaResponse = await fetch(
+        "https://localhost:7050/api/Citas/crear",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(nuevaCita),
+        }
+      );
+
+      const citaData = await citaResponse.json();
+
+      if (!citaResponse.ok) {
+        throw new Error(citaData.mensaje || "Error al guardar la cita");
+      }
+
+      // Paso 3: Obtener los detalles de la cita recién creada
+      const detalleResponse = await fetch(
+        `https://localhost:7050/api/Citas/${citaData.idCita}`
+      );
+      const detalleCita = await detalleResponse.json();
+
+      if (!detalleResponse.ok) {
+        throw new Error(
+          detalleCita.mensaje || "Error al obtener detalles de la cita"
+        );
+      }
+
+      console.log("detalles de la cita", detalleCita);
+
+      alert("Cita creada exitosamente. ID de Cita: " + citaData.idCita);
+      onGuardar(detalleCita);
+      handleClose();
+      onClose();
+    } catch (error) {
+      alert("Ocurrió un error al guardar los datos. Intente nuevamente.");
+    }
   };
 
   // Formato de fecha estilizado
   const formatoDia = fecha ? fecha.format("DD") : "--";
   const formatoMesAnio = fecha ? fecha.format("MMMM YYYY") : "Mes Año";
+
+  // Función para limpiar los campos
+  const resetFields = () => {
+    setFecha(selectedDate || null);
+    setHora(null);
+    setServicio("");
+    setDescripcion("");
+    setMarcaSeleccionada("");
+    setModeloSeleccionado("");
+    setAnhoSeleccionado("");
+    setModelos([]);
+  };
+
+  // Función para manejar el cierre del modal
+  const handleClose = () => {
+    resetFields(); // Limpiar los campos
+    onClose(); // Cerrar el modal
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -146,7 +238,9 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
           <InputLabel>Tipo de Servicio</InputLabel>
           <Select
             value={servicio}
-            onChange={(e) => setServicio(e.target.value)}
+            onChange={(e) => {
+              setServicio(e.target.value);
+            }}
             label="Tipo de Servicio"
             disabled={errorServicios || tiposServicio.length === 0}
           >
@@ -217,7 +311,7 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
               label="Año"
             >
               {anhos.map((anho) => (
-                <MenuItem key={anho.idAnho} value={anho.anho}>
+                <MenuItem key={anho.idAnho} value={anho.idAnho}>
                   {anho.anho}
                 </MenuItem>
               ))}

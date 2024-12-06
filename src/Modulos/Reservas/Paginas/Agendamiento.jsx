@@ -12,6 +12,7 @@ const Agendamiento = () => {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(
     dayjs().format("YYYY-MM-DD")
   ); // Fecha inicial
+  const [citas, setCitas] = useState([]);
 
   const citasPorFecha = {
     "2024-11-26": [
@@ -38,12 +39,10 @@ const Agendamiento = () => {
     );
   };
 
-  const guardarCita = (nuevaCita) => {
-    console.log("Nueva cita creada:", nuevaCita);
-    setModalOpen(false); // Cierra el modal
+  const guardarCita = (detalleCita) => {
+    setCitas((prevCitas) => [...prevCitas, detalleCita]); // Agregar la cita recién creada al estado
+    setModalOpen(false); // Cerrar el modal
   };
-
-  const citas = citasPorFecha[fechaSeleccionada] || [];
 
   return (
     <Box sx={{ padding: 3 }}>
