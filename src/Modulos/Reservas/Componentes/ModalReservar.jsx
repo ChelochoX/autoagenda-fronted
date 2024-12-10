@@ -13,13 +13,24 @@ import {
   Box,
   Typography,
   Paper,
+  Divider,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
+import SaveIcon from "@mui/icons-material/Save";
+import CancelIcon from "@mui/icons-material/Cancel";
 
-const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
+const ModalReservar = ({
+  open,
+  onClose,
+  onGuardar,
+  onActualizar, // AGREGADO: Callback para actualizar una cita
+  selectedDate,
+  mode = "crear", // AGREGADO: Define si el modal está en modo "crear" o "editar"
+  cita = null, // AGREGADO: Datos de la cita seleccionada para editar
+}) => {
   const [fecha, setFecha] = useState(selectedDate || null);
   const [hora, setHora] = useState(null);
   const [servicio, setServicio] = useState("");
@@ -35,9 +46,23 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
   const [modeloSeleccionado, setModeloSeleccionado] = useState("");
   const [anhoSeleccionado, setAnhoSeleccionado] = useState("");
 
+  // Prellenar datos si estamos en modo "editar" y se selecciona una cita
+  useEffect(() => {
+    if (mode === "editar" && cita) {
+      // MODIFICADO
+      setFecha(dayjs(cita.fecha));
+      setHora(dayjs(cita.hora, "HH:mm"));
+      setServicio(cita.tipoServicio);
+      setDescripcion(cita.descripcion);
+      setMarcaSeleccionada(cita.marca);
+      setModeloSeleccionado(cita.modelo);
+      setAnhoSeleccionado(cita.anho);
+    }
+  }, [mode, cita]); // MODIFICADO
+
   // Cargar tipos de servicio
   useEffect(() => {
-    if (open) {
+    if (open && mode === "crear") {
       setFecha(selectedDate || dayjs());
 
       fetch("https://localhost:7050/api/TipoServicios/tiposservicios")
@@ -51,7 +76,6 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
           setErrorServicios(false);
         })
         .catch((error) => {
-          console.error("Error al cargar tipos de servicio:", error);
           setErrorServicios(true);
         });
 
@@ -73,11 +97,15 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
         .then((data) => setAnhos(data))
         .catch((error) => console.error("Error al cargar años:", error));
     }
-  }, [open, selectedDate]);
+  }, [open, selectedDate, mode]);
 
   // Cargar modelos dinámicamente cuando cambia la marca seleccionada
   useEffect(() => {
-    if (marcaSeleccionada) {
+    // Verificar si marcaSeleccionada es un número válido antes de llamar a la API
+    const isIdValido =
+      !isNaN(marcaSeleccionada) && Number(marcaSeleccionada) > 0;
+
+    if (isIdValido) {
       fetch(`https://localhost:7050/api/Vehiculos/modelos/${marcaSeleccionada}`)
         .then((response) => {
           if (!response.ok) throw new Error("Error al cargar los modelos");
@@ -86,7 +114,8 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
         .then((data) => setModelos(data))
         .catch((error) => console.error("Error al cargar modelos:", error));
     } else {
-      setModelos([]); // Limpiar modelos si no hay marca seleccionada
+      // Si no es un ID válido, limpiar los modelos
+      setModelos([]);
     }
   }, [marcaSeleccionada]);
 
@@ -136,11 +165,14 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
         IdVehiculo: idVehiculo,
         Fecha: fecha ? fecha.format("YYYY-MM-DD") : "",
         Hora: hora ? hora.format("HH:mm") : "",
-        IdTipoServicio: servicio,
+        IdTipoServicio: tiposServicio.find((tipo) => tipo.nombre === servicio)
+          ?.idTipoServicio,
         Descripcion: descripcion,
         Estado: "pendiente",
         IdCliente: 1,
       };
+
+      console.log(nuevaCita);
 
       // Paso 2: Insertar la cita
       const citaResponse = await fetch(
@@ -165,19 +197,53 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
       const detalleCita = await detalleResponse.json();
 
       if (!detalleResponse.ok) {
-        throw new Error(
-          detalleCita.mensaje || "Error al obtener detalles de la cita"
-        );
+        const errorData = await citaResponse.json();
+        throw new Error(errorData.mensaje || "Error al guardar la cita");
       }
 
-      console.log("detalles de la cita", detalleCita);
-
-      alert("Cita creada exitosamente. ID de Cita: " + citaData.idCita);
       onGuardar(detalleCita);
       handleClose();
       onClose();
     } catch (error) {
       alert("Ocurrió un error al guardar los datos. Intente nuevamente.");
+    }
+  };
+
+  // Actualizar una cita existente
+  const actualizarCita = async () => {
+    if (!cita || !cita.idCita) {
+      console.error("No hay cita válida para actualizar.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://localhost:7050/api/Citas/${cita.idCita}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            hora: hora ? hora.format("HH:mm") : null,
+            descripcion: descripcion || "",
+          }),
+        }
+      );
+
+      const citaActualizada = await response.json();
+      if (!response.ok) {
+        throw new Error("Error al actualizar la cita");
+      }
+
+      alert("Cita actualizada exitosamente");
+
+      if (onActualizar) {
+        onActualizar(); // Notifica al padre sobre la actualización
+      }
+
+      resetFields();
+      onClose(); // Cierra el modal
+    } catch (error) {
+      alert("Ocurrió un error al actualizar la cita. Intente nuevamente.");
     }
   };
 
@@ -205,121 +271,160 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      {/* Header */}
       <Box
         sx={{
+          backgroundColor: mode === "editar" ? "#0288d1" : "#43a047",
+          color: "#fff",
+          padding: 2,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "16px 24px 0",
         }}
       >
-        <DialogTitle sx={{ flex: 1, padding: 0 }}>
-          Reservar Nueva Cita
+        <DialogTitle sx={{ flex: 1, padding: 0, fontWeight: "bold" }}>
+          {mode === "editar" ? "Actualizar Cita" : "Reservar Nueva Cita"}
         </DialogTitle>
         <Box sx={{ textAlign: "right" }}>
           <Typography
             variant="h3"
-            sx={{ fontWeight: "bold", color: "#558b2f", lineHeight: 1 }}
+            component="div"
+            sx={{ fontWeight: "bold", lineHeight: 1 }}
           >
-            {formatoDia}
+            {fecha?.format("DD") || "--"}
           </Typography>
           <Typography
             variant="body1"
-            sx={{ textTransform: "capitalize", color: "#8e8e8e" }}
+            component="span"
+            sx={{ fontWeight: "bold" }}
           >
-            {formatoMesAnio}
+            {fecha?.format("MMMM YYYY") || "Mes Año"}
           </Typography>
         </Box>
       </Box>
 
       <DialogContent>
-        {/* Combo Box de Tipo de Servicio */}
-        <FormControl fullWidth sx={{ marginBottom: 2 }}>
-          <InputLabel>Tipo de Servicio</InputLabel>
-          <Select
-            value={servicio}
-            onChange={(e) => {
-              setServicio(e.target.value);
-            }}
+        <Divider sx={{ marginBottom: 2 }} />
+
+        {/* Tipo de Servicio */}
+        {mode === "editar" ? (
+          <TextField
             label="Tipo de Servicio"
-            disabled={errorServicios || tiposServicio.length === 0}
-          >
-            {errorServicios ? (
-              <MenuItem disabled>
-                Error al cargar los tipos de servicio
-              </MenuItem>
-            ) : tiposServicio.length === 0 ? (
-              <MenuItem disabled>Cargando servicios...</MenuItem>
-            ) : (
-              tiposServicio.map((tipo) => (
-                <MenuItem key={tipo.idTipoServicio} value={tipo.idTipoServicio}>
+            value={servicio || "No disponible"}
+            InputProps={{ readOnly: true }}
+            fullWidth
+            sx={{ marginBottom: 2 }}
+          />
+        ) : (
+          <FormControl fullWidth sx={{ marginBottom: 2 }}>
+            <InputLabel>Tipo de Servicio</InputLabel>
+            <Select
+              value={servicio}
+              onChange={(e) => setServicio(e.target.value)}
+              label="Tipo de Servicio"
+              disabled={errorServicios || tiposServicio.length === 0}
+            >
+              {tiposServicio.map((tipo) => (
+                <MenuItem key={tipo.idTipoServicio} value={tipo.nombre}>
                   {tipo.nombre}
                 </MenuItem>
-              ))
-            )}
-          </Select>
-        </FormControl>
+              ))}
+            </Select>
+          </FormControl>
+        )}
 
-        {/* Group Box para Marca, Modelo y Año */}
+        {/* Información del vehículo */}
         <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
-          <Typography variant="h6" sx={{ marginBottom: 2 }}>
+          <Typography
+            variant="subtitle1"
+            sx={{ fontWeight: "bold", marginBottom: 1 }}
+          >
             Vehículo
           </Typography>
 
           {/* Marca */}
-          <FormControl fullWidth sx={{ marginBottom: 2 }}>
-            <InputLabel>Marca</InputLabel>
-            <Select
-              value={marcaSeleccionada}
-              onChange={(e) => setMarcaSeleccionada(e.target.value)}
+          {mode === "editar" ? (
+            <TextField
               label="Marca"
-            >
-              {marcas.map((marca) => (
-                <MenuItem key={marca.idMarca} value={marca.idMarca}>
-                  {marca.nombre}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              value={marcaSeleccionada}
+              InputProps={{ readOnly: true }}
+              fullWidth
+              sx={{ marginBottom: 2 }}
+            />
+          ) : (
+            <FormControl fullWidth sx={{ marginBottom: 2 }}>
+              <InputLabel>Marca</InputLabel>
+              <Select
+                value={marcaSeleccionada}
+                onChange={(e) => setMarcaSeleccionada(e.target.value)}
+                label="Marca"
+              >
+                {marcas.map((marca) => (
+                  <MenuItem key={marca.idMarca} value={marca.idMarca}>
+                    {marca.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
           {/* Modelo */}
-          <FormControl
-            fullWidth
-            sx={{ marginBottom: 2 }}
-            disabled={!marcaSeleccionada}
-          >
-            <InputLabel>Modelo</InputLabel>
-            <Select
-              value={modeloSeleccionado}
-              onChange={(e) => setModeloSeleccionado(e.target.value)}
+          {mode === "editar" ? (
+            <TextField
               label="Modelo"
+              value={modeloSeleccionado}
+              InputProps={{ readOnly: true }}
+              fullWidth
+              sx={{ marginBottom: 2 }}
+            />
+          ) : (
+            <FormControl
+              fullWidth
+              sx={{ marginBottom: 2 }}
+              disabled={!marcaSeleccionada}
             >
-              {modelos.map((modelo) => (
-                <MenuItem key={modelo.idModelo} value={modelo.idModelo}>
-                  {modelo.nombre}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <InputLabel>Modelo</InputLabel>
+              <Select
+                value={modeloSeleccionado}
+                onChange={(e) => setModeloSeleccionado(e.target.value)}
+                label="Modelo"
+              >
+                {modelos.map((modelo) => (
+                  <MenuItem key={modelo.idModelo} value={modelo.idModelo}>
+                    {modelo.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
 
           {/* Año */}
-          <FormControl fullWidth>
-            <InputLabel>Año</InputLabel>
-            <Select
-              value={anhoSeleccionado}
-              onChange={(e) => setAnhoSeleccionado(e.target.value)}
+          {mode === "editar" ? (
+            <TextField
               label="Año"
-            >
-              {anhos.map((anho) => (
-                <MenuItem key={anho.idAnho} value={anho.idAnho}>
-                  {anho.anho}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              value={anhoSeleccionado}
+              InputProps={{ readOnly: true }}
+              fullWidth
+            />
+          ) : (
+            <FormControl fullWidth>
+              <InputLabel>Año</InputLabel>
+              <Select
+                value={anhoSeleccionado}
+                onChange={(e) => setAnhoSeleccionado(e.target.value)}
+                label="Año"
+              >
+                {anhos.map((anho) => (
+                  <MenuItem key={anho.idAnho} value={anho.idAnho}>
+                    {anho.anho}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </Paper>
 
-        {/* TimePicker para seleccionar la hora */}
+        {/* Hora y descripción */}
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <TimePicker
             label="Hora"
@@ -328,8 +433,6 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
             sx={{ marginTop: 2, width: "100%" }}
           />
         </LocalizationProvider>
-
-        {/* Campo de Descripción */}
         <TextField
           label="Descripción"
           multiline
@@ -341,16 +444,25 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
         />
       </DialogContent>
 
+      {/* Acciones */}
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button
+          onClick={handleClose}
+          color="secondary"
+          startIcon={<CancelIcon />}
+        >
           Cancelar
         </Button>
-        <Button onClick={guardarCita} color="primary">
-          Guardar
+        <Button
+          onClick={mode === "editar" ? actualizarCita : guardarCita}
+          color="primary"
+          variant="contained"
+          startIcon={<SaveIcon />}
+        >
+          {mode === "editar" ? "Actualizar" : "Guardar"}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
-
 export default ModalReservar;

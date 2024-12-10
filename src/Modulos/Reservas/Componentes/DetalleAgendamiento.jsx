@@ -9,14 +9,8 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit"; // Ícono de Modificar
 import DeleteIcon from "@mui/icons-material/Delete"; // Ícono de Eliminar
-import VisibilityIcon from "@mui/icons-material/Visibility"; // Ícono de Visualizar
 
-const DetalleAgendamiento = ({
-  citas,
-  onCancelar,
-  onModificar,
-  onVisualizar,
-}) => {
+const DetalleAgendamiento = ({ citas, onCancelar, onModificar }) => {
   const getColorByEstado = (estado) => {
     switch (estado) {
       case "pendiente":
@@ -88,14 +82,22 @@ const DetalleAgendamiento = ({
                       variant="subtitle1"
                       sx={{ color: "white", fontWeight: "bold" }} // Texto blanco para mejor contraste
                     >
-                      Hora: {cita.hora} - Modelo: {cita.marca} {cita.modelo} (
-                      {cita.anho})
+                      Hora: {cita.hora} - Modelo: {cita.marca} {cita.modelo}
                     </Typography>
                   }
                   secondary={
                     <>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "white", fontWeight: "bold" }}
+                      >
+                        Año: {cita.anho}
+                      </Typography>
                       <Typography variant="body2" sx={{ color: "white" }}>
-                        Placa: {cita.placa}
+                        Chapa: {cita.placa}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: "white" }}>
+                        Tipo de Servicio: {cita.tipoServicio} {/* AGREGADO */}
                       </Typography>
                       <Typography variant="body2" sx={{ color: "white" }}>
                         Descripción: {cita.descripcion}
@@ -106,15 +108,6 @@ const DetalleAgendamiento = ({
 
                 {/* Botones de acción */}
                 <Box>
-                  {/* Botón de Visualizar */}
-                  <IconButton
-                    aria-label="visualizar"
-                    onClick={() => onVisualizar(cita)}
-                    sx={{ color: "white", marginRight: 1 }}
-                  >
-                    <VisibilityIcon />
-                  </IconButton>
-
                   {/* Botón de Modificar */}
                   <IconButton
                     aria-label="modificar"
