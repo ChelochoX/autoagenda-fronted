@@ -10,7 +10,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit"; // Ícono de Modificar
 import DeleteIcon from "@mui/icons-material/Delete"; // Ícono de Eliminar
 
-const DetalleAgendamiento = ({ citas, onCancelar, onModificar }) => {
+const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
   const getColorByEstado = (estado) => {
     switch (estado) {
       case "pendiente":
@@ -21,6 +21,31 @@ const DetalleAgendamiento = ({ citas, onCancelar, onModificar }) => {
         return "#f28b82"; // Rojo claro
       default:
         return "#ddd"; // Gris claro
+    }
+  };
+
+  const eliminarCita = async (idCita) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar esta cita?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://localhost:7050/api/Citas/${idCita}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error al eliminar la cita");
+      }
+
+      alert("Cita eliminada exitosamente");
+      onEliminarCita(idCita); // Recargar citas después de eliminar
+    } catch (error) {
+      console.error("Error al eliminar la cita:", error);
+      alert("Ocurrió un error al eliminar la cita.");
     }
   };
 
@@ -120,7 +145,7 @@ const DetalleAgendamiento = ({ citas, onCancelar, onModificar }) => {
                   {/* Botón de Eliminar */}
                   <IconButton
                     aria-label="eliminar"
-                    onClick={() => onCancelar(cita)}
+                    onClick={() => eliminarCita(cita.idCita)}
                     sx={{ color: "white" }}
                   >
                     <DeleteIcon />

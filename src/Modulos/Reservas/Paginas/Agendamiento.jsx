@@ -25,18 +25,22 @@ const Agendamiento = () => {
         `https://localhost:7050/api/Citas/buscarcita?fecha=${fecha}&idCliente=${idCliente}`
       );
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          setCitas([]); // Vaciar las citas si no se encuentran
-        } else {
-          throw new Error("Error al cargar las citas");
-        }
-      } else {
-        const data = await response.json();
-        setCitas(data); // Actualizar el estado con las citas obtenidas
+      if (response.status === 404) {
+        // Si el servidor retorna un 404 (sin datos), vaciamos las citas
+        setCitas([]);
+        return;
       }
+
+      if (!response.ok) {
+        // Para otros errores (500, etc.), lanzar una excepción
+        throw new Error("Error al cargar las citas");
+      }
+
+      // Si la respuesta es válida, actualizamos las citas
+      const data = await response.json();
+      setCitas(data);
     } catch (error) {
-      //setCitas([]); // En caso de error, vaciar el estado
+      setCitas([]);
     }
   };
 
@@ -71,6 +75,11 @@ const Agendamiento = () => {
     setCitaSeleccionada(null); // Limpiar la cita seleccionada
   };
 
+  // Función para eliminar una cita localmente
+  const eliminarCitaLocalmente = (idCita) => {
+    setCitas((prevCitas) => prevCitas.filter((cita) => cita.idCita !== idCita));
+  };
+
   return (
     <Box sx={{ padding: 3 }}>
       <Typography
@@ -98,10 +107,7 @@ const Agendamiento = () => {
             <DetalleAgendamiento
               citas={citas} // Pasar todo el array de citas
               onModificar={manejarEditarCita}
-              onCancelar={(cita) => {
-                // Lógica para manejar cancelaciones (opcional)
-                console.log("Cancelar cita:", cita);
-              }}
+              onEliminarCita={eliminarCitaLocalmente}
             />
           ) : (
             <Typography>No hay citas para mostrar</Typography>
