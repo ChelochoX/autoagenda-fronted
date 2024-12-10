@@ -77,7 +77,7 @@ const Agendamiento = () => {
         variant="h4"
         sx={{ marginBottom: 3, color: "#558b2f", textAlign: "center" }}
       >
-        Agendamiento de Mantenimiento
+        Agenda de Mantenimiento
       </Typography>
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
@@ -95,13 +95,14 @@ const Agendamiento = () => {
         </Grid>
         <Grid item xs={12} md={8}>
           {citas.length > 0 ? (
-            citas.map((cita) => (
-              <DetalleAgendamiento
-                key={cita.idCita}
-                citas={citas}
-                onModificar={manejarEditarCita}
-              />
-            ))
+            <DetalleAgendamiento
+              citas={citas} // Pasar todo el array de citas
+              onModificar={manejarEditarCita}
+              onCancelar={(cita) => {
+                // Lógica para manejar cancelaciones (opcional)
+                console.log("Cancelar cita:", cita);
+              }}
+            />
           ) : (
             <Typography>No hay citas para mostrar</Typography>
           )}
