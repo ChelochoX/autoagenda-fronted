@@ -23,13 +23,40 @@ const Calendario = ({ value, manejarCambioDeFecha }) => {
       adapterLocale="es" // Configurar el idioma en español
     >
       <DateCalendar
-        value={fechaSeleccionada} // Muestra la fecha seleccionada
+        value={fechaSeleccionada}
         onChange={manejarCambioDeFechaInterno}
         sx={{
-          backgroundColor: "#e8f5e9",
-          borderRadius: "8px",
-          padding: 2,
-          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
+          backgroundColor: "#ffffff",
+          borderRadius: "12px",
+          padding: "16px",
+          boxShadow: "0px 8px 16px rgba(0, 0, 0, 0.2)",
+          "& .MuiPickersDay-root": {
+            color: "#37474f", // Color del texto de los días
+            fontWeight: "bold",
+            borderRadius: "50%",
+            transition: "all 0.3s ease",
+          },
+          "& .MuiPickersDay-root:hover": {
+            backgroundColor: "#a5d6a7", // Fondo al pasar el cursor
+            color: "#ffffff", // Texto al pasar el cursor
+          },
+          "& .MuiPickersDay-root.Mui-selected": {
+            backgroundColor: "#66bb6a", // Fondo del día seleccionado
+            color: "#ffffff", // Texto del día seleccionado
+          },
+          "& .MuiPickersDay-root.Mui-selected:hover": {
+            backgroundColor: "#43a047", // Fondo del día seleccionado al pasar el cursor
+          },
+          "& .MuiTypography-root": {
+            color: "#2e7d32", // Color del mes y año
+          },
+          "& .MuiPickersArrowSwitcher-button": {
+            color: "#2e7d32", // Color de las flechas
+            transition: "color 0.3s ease",
+          },
+          "& .MuiPickersArrowSwitcher-button:hover": {
+            color: "#1b5e20", // Color de las flechas al pasar el cursor
+          },
         }}
       />
     </LocalizationProvider>
