@@ -61,17 +61,27 @@ const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
         height: "100%", // Mantener la altura completa disponible
       }}
     >
-      {/* Título */}
-      <Typography
-        variant="h6"
+      {/* Contenedor para el título */}
+      <Box
         sx={{
-          marginBottom: 2,
-          color: "#558b2f", // Verde oscuro
-          fontWeight: "bold",
+          backgroundColor: "#558b2f", // Fondo verde oscuro
+          borderRadius: "8px",
+          padding: "15px",
+          marginBottom: "15px",
+          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Sombra para destacar
         }}
       >
-        Detalles del Agendamiento
-      </Typography>
+        <Typography
+          variant="h6"
+          sx={{
+            color: "white", // Texto blanco para contraste
+            fontWeight: "bold",
+            textAlign: "center",
+          }}
+        >
+          Detalles del Agendamiento
+        </Typography>
+      </Box>
 
       {/* Contenedor con scroll */}
       <Box

@@ -5,6 +5,7 @@ import DetalleAgendamiento from "../Componentes/DetalleAgendamiento";
 import LeyendaEstados from "../Componentes/LeyendaEstados";
 import AccionesReservas from "../Componentes/AccionesReservas";
 import ModalReservar from "../Componentes/ModalReservar";
+import EventNoteIcon from "@mui/icons-material/EventNote";
 import dayjs from "dayjs";
 
 const Agendamiento = () => {
@@ -82,12 +83,38 @@ const Agendamiento = () => {
 
   return (
     <Box sx={{ padding: 3 }}>
-      <Typography
-        variant="h4"
-        sx={{ marginBottom: 3, color: "#558b2f", textAlign: "center" }}
+      {/* Descripción Principal con estilo */}
+      <Box
+        sx={{
+          backgroundColor: "#558b2f", // Fondo verde oscuro
+          borderRadius: "10px",
+          padding: "20px",
+          marginBottom: "20px",
+          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.2)", // Sombra para destacar
+          textAlign: "center", // Centrar texto
+        }}
       >
-        Agenda de Mantenimiento
-      </Typography>
+        <Typography
+          variant="h4"
+          sx={{
+            color: "white", // Texto blanco
+            fontWeight: "bold", // Negrita
+            letterSpacing: "1.5px", // Espaciado entre letras
+          }}
+        >
+          Agenda de Mantenimiento
+        </Typography>
+        <Typography
+          variant="body1"
+          sx={{
+            color: "#dce775", // Texto amarillo suave
+            marginTop: "10px",
+            fontStyle: "italic", // Estilo cursiva
+          }}
+        >
+          Organiza y visualiza todas tus citas con facilidad.
+        </Typography>
+      </Box>
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
           <Calendario
@@ -110,7 +137,44 @@ const Agendamiento = () => {
               onEliminarCita={eliminarCitaLocalmente}
             />
           ) : (
-            <Typography>No hay citas para mostrar</Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column",
+                textAlign: "center",
+                backgroundColor: "#f0f0f0", // Gris claro
+                padding: "20px",
+                borderRadius: "8px",
+                minHeight: "200px",
+              }}
+            >
+              <EventNoteIcon
+                sx={{
+                  fontSize: "50px",
+                  color: "#bdbdbd", // Gris oscuro
+                  marginBottom: "10px",
+                }}
+              />
+              <Typography
+                variant="h6"
+                sx={{
+                  color: "#757575", // Gris medio
+                  fontWeight: "bold",
+                }}
+              >
+                No hay citas para esta fecha
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#9e9e9e", // Gris claro
+                }}
+              >
+                Selecciona otra fecha o crea una nueva cita para comenzar.
+              </Typography>
+            </Box>
           )}
         </Grid>
       </Grid>
