@@ -17,13 +17,13 @@ const Agendamiento = () => {
   const [modalMode, setModalMode] = useState("crear"); // "crear" o "editar"
   const [citaSeleccionada, setCitaSeleccionada] = useState(null); // Cita a editar
 
-  const idCliente = 1;
+  const idUsuario = 2;
 
   // Función para obtener citas desde el backend
-  const cargarCitas = async (fecha, idCliente) => {
+  const cargarCitas = async (fecha, idUsuario) => {
     try {
       const response = await fetch(
-        `https://localhost:7050/api/Citas/buscarcita?fecha=${fecha}&idCliente=${idCliente}`
+        `https://localhost:7050/api/Citas/buscarcita?fecha=${fecha}&idUsuario=${idUsuario}`
       );
 
       if (response.status === 404) {
@@ -47,7 +47,7 @@ const Agendamiento = () => {
 
   // Llamar a cargarCitas cada vez que cambia la fecha seleccionada
   useEffect(() => {
-    cargarCitas(fechaSeleccionada, idCliente);
+    cargarCitas(fechaSeleccionada, idUsuario);
   }, [fechaSeleccionada]);
 
   const manejarCambioDeFecha = (nuevaFecha) => {
@@ -71,7 +71,7 @@ const Agendamiento = () => {
   };
 
   const actualizarCita = () => {
-    cargarCitas(fechaSeleccionada, idCliente); // Recargar las citas
+    cargarCitas(fechaSeleccionada, idUsuario); // Recargar las citas
     setModalMode("crear"); // Resetear el modo del modal
     setCitaSeleccionada(null); // Limpiar la cita seleccionada
   };

@@ -169,7 +169,7 @@ const ModalReservar = ({
           ?.idTipoServicio,
         Descripcion: descripcion,
         Estado: "pendiente",
-        IdCliente: 1,
+        IdUsuario: 2,
       };
 
       console.log(nuevaCita);

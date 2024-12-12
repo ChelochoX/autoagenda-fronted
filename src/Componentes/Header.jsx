@@ -44,6 +44,12 @@ const Header = () => {
       color: "#FFFF00",
       shape: "polygon(15% 10%, 95% 0, 80% 90%, 0 85%)",
     },
+    {
+      name: "Gestión Reservas", // Nuevo enlace
+      path: "/gestionreservas",
+      color: "#FFA500", // Color naranja
+      shape: "polygon(20% 0, 80% 10%, 100% 80%, 10% 100%)", // Nuevo diseño
+    },
   ];
 
   const [anchorEl, setAnchorEl] = React.useState(null);
