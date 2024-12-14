@@ -10,6 +10,9 @@ import {
   CircularProgress,
   Chip,
   TextField,
+  Alert,
+  AlertTitle,
+  Stack,
 } from "@mui/material";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -29,7 +32,6 @@ export default function ReservaCard({ cita, onAccion }) {
     cita.descripcion
   );
 
-  // Nuevo: Estados para valores originales
   const [originalHora, setOriginalHora] = useState(
     new Date(`1970-01-01T${cita.hora}`)
   );
@@ -37,18 +39,24 @@ export default function ReservaCard({ cita, onAccion }) {
     cita.descripcion
   );
 
+  const [alert, setAlert] = useState({ type: "", message: "", visible: false });
+
   const handleEdit = () => {
-    // Guardar los valores originales al entrar en modo edición
     setOriginalHora(updatedHora);
     setOriginalDescripcion(updatedDescripcion);
     setIsEditing(true);
   };
 
   const handleCancelEdit = () => {
-    // Restaurar los valores originales al cancelar edición
     setUpdatedHora(originalHora);
     setUpdatedDescripcion(originalDescripcion);
     setIsEditing(false);
+
+    setAlert({
+      type: "info",
+      message: "Cambios descartados.",
+      visible: true,
+    });
   };
 
   const handleSaveChanges = async () => {
@@ -56,15 +64,13 @@ export default function ReservaCard({ cita, onAccion }) {
       const formattedHora = updatedHora.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
-        hour12: false, // Formato de 24 horas
+        hour12: false,
       });
 
       const body = {
         hora: formattedHora,
         descripcion: updatedDescripcion,
       };
-
-      console.log("Cuerpo de la solicitud:", body);
 
       const response = await fetch(
         `https://localhost:7050/api/Citas/${cita.idCita}`,
@@ -81,11 +87,21 @@ export default function ReservaCard({ cita, onAccion }) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
-      setIsEditing(false); // Finalizar edición
-      alert("¡Cita actualizada correctamente!");
+      setIsEditing(false);
+
+      setAlert({
+        type: "success",
+        message: "¡Cita actualizada correctamente!",
+        visible: true,
+      });
     } catch (error) {
       console.error("Error al actualizar la cita:", error);
-      alert("Hubo un error al guardar los cambios.");
+
+      setAlert({
+        type: "error",
+        message: "Hubo un error al guardar los cambios.",
+        visible: true,
+      });
     }
   };
 
@@ -141,6 +157,27 @@ export default function ReservaCard({ cita, onAccion }) {
         position: "relative",
       }}
     >
+      {alert.visible && (
+        <Stack sx={{ width: "100%", mb: 2 }} spacing={2}>
+          <Alert
+            severity={alert.type}
+            action={
+              <Button
+                size="small"
+                onClick={() => setAlert({ ...alert, visible: false })}
+              >
+                Cerrar
+              </Button>
+            }
+          >
+            <AlertTitle>
+              {alert.type.charAt(0).toUpperCase() + alert.type.slice(1)}
+            </AlertTitle>
+            {alert.message}
+          </Alert>
+        </Stack>
+      )}
+
       <IconButton
         onClick={handleOpenModal}
         style={{
@@ -225,8 +262,10 @@ export default function ReservaCard({ cita, onAccion }) {
           />
         </Box>
 
-        <Typography variant="body1">
-          <strong>Hora:</strong>{" "}
+        <Box>
+          <Typography variant="body1" component="span">
+            <strong>Hora:</strong>{" "}
+          </Typography>
           {isEditing ? (
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <TimePicker
@@ -241,9 +280,12 @@ export default function ReservaCard({ cita, onAccion }) {
               minute: "2-digit",
             })
           )}
-        </Typography>
-        <Typography variant="body1" style={{ marginTop: "10px" }}>
-          <strong>Descripción:</strong>{" "}
+        </Box>
+
+        <Box style={{ marginTop: "10px" }}>
+          <Typography variant="body1" component="span">
+            <strong>Descripción:</strong>{" "}
+          </Typography>
           {isEditing ? (
             <TextField
               value={updatedDescripcion}
@@ -254,7 +296,7 @@ export default function ReservaCard({ cita, onAccion }) {
           ) : (
             updatedDescripcion
           )}
-        </Typography>
+        </Box>
 
         <Box
           style={{
@@ -316,7 +358,7 @@ export default function ReservaCard({ cita, onAccion }) {
                 color: "#1976d2",
                 margin: "0 5px",
               }}
-              onClick={handleEdit} // Activar modo edición
+              onClick={handleEdit}
             >
               Modificar
             </Button>
