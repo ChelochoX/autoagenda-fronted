@@ -18,18 +18,39 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import "../Estilos/ReservaCard.css";
 
 export default function ReservaCard({ cita, onAccion }) {
-  const [modalVisible, setModalVisible] = useState(false); // Estado del modal
-  const [loading, setLoading] = useState(false); // Estado para el spinner
-  const [detalleUsuario, setDetalleUsuario] = useState(null); // Datos del cliente
-  const [isEditing, setIsEditing] = useState(false); // Estado de edición
+  const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [detalleUsuario, setDetalleUsuario] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [updatedHora, setUpdatedHora] = useState(
     new Date(`1970-01-01T${cita.hora}`)
-  ); // Hora editada
+  );
   const [updatedDescripcion, setUpdatedDescripcion] = useState(
     cita.descripcion
-  ); // Descripción editada
+  );
 
-  // Guardar cambios al backend
+  // Nuevo: Estados para valores originales
+  const [originalHora, setOriginalHora] = useState(
+    new Date(`1970-01-01T${cita.hora}`)
+  );
+  const [originalDescripcion, setOriginalDescripcion] = useState(
+    cita.descripcion
+  );
+
+  const handleEdit = () => {
+    // Guardar los valores originales al entrar en modo edición
+    setOriginalHora(updatedHora);
+    setOriginalDescripcion(updatedDescripcion);
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    // Restaurar los valores originales al cancelar edición
+    setUpdatedHora(originalHora);
+    setUpdatedDescripcion(originalDescripcion);
+    setIsEditing(false);
+  };
+
   const handleSaveChanges = async () => {
     try {
       const response = await fetch(
@@ -51,7 +72,7 @@ export default function ReservaCard({ cita, onAccion }) {
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-      setIsEditing(false); // Finalizar edición
+      setIsEditing(false);
       alert("¡Cita actualizada correctamente!");
     } catch (error) {
       console.error("Error al actualizar la cita:", error);
@@ -59,10 +80,9 @@ export default function ReservaCard({ cita, onAccion }) {
     }
   };
 
-  // Obtener los datos del cliente
   const handleOpenModal = async () => {
-    setModalVisible(true); // Mostrar modal
-    setLoading(true); // Activar spinner
+    setModalVisible(true);
+    setLoading(true);
     try {
       const response = await fetch(
         `https://localhost:7050/api/Usuarios/${cita.idUsuario}`
@@ -71,32 +91,30 @@ export default function ReservaCard({ cita, onAccion }) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
       const data = await response.json();
-      setDetalleUsuario(data); // Guardar datos del cliente
+      setDetalleUsuario(data);
     } catch (error) {
       console.error("Error en la llamada al endpoint:", error);
-      setDetalleUsuario(null); // Manejo de error
+      setDetalleUsuario(null);
     } finally {
-      setLoading(false); // Desactivar spinner
+      setLoading(false);
     }
   };
 
-  // Cerrar el modal
   const handleCloseModal = () => {
     setModalVisible(false);
-    setDetalleUsuario(null); // Limpiar datos
+    setDetalleUsuario(null);
   };
 
-  // Definir colores según estado
   const getEstadoStyles = (estado) => {
     switch (estado) {
       case "aprobado":
-        return { backgroundColor: "rgba(76, 175, 80, 0.2)", color: "#4caf50" }; // Verde suave
+        return { backgroundColor: "rgba(76, 175, 80, 0.2)", color: "#4caf50" };
       case "pendiente":
-        return { backgroundColor: "rgba(25, 118, 210, 0.2)", color: "#1976d2" }; // Azul suave
+        return { backgroundColor: "rgba(25, 118, 210, 0.2)", color: "#1976d2" };
       case "rechazado":
-        return { backgroundColor: "rgba(244, 67, 54, 0.2)", color: "#f44336" }; // Rojo suave
+        return { backgroundColor: "rgba(244, 67, 54, 0.2)", color: "#f44336" };
       default:
-        return { backgroundColor: "#f0f0f0", color: "#000" }; // Por defecto
+        return { backgroundColor: "#f0f0f0", color: "#000" };
     }
   };
 
@@ -114,7 +132,6 @@ export default function ReservaCard({ cita, onAccion }) {
         position: "relative",
       }}
     >
-      {/* Ícono para mostrar el modal */}
       <IconButton
         onClick={handleOpenModal}
         style={{
@@ -127,7 +144,6 @@ export default function ReservaCard({ cita, onAccion }) {
         <AccountCircleIcon />
       </IconButton>
 
-      {/* Modal con animación de cortina */}
       <Box className={`modal-overlay ${modalVisible ? "show" : "hide"}`}>
         {loading ? (
           <Box style={{ textAlign: "center", marginTop: "50px" }}>
@@ -175,7 +191,6 @@ export default function ReservaCard({ cita, onAccion }) {
         </Typography>
         <Divider style={{ margin: "10px 0" }} />
 
-        {/* Chips de Marca, Modelo y Año */}
         <Box
           style={{
             display: "flex",
@@ -201,26 +216,23 @@ export default function ReservaCard({ cita, onAccion }) {
           />
         </Box>
 
-        {/* Campos de Hora y Descripción (editables) */}
-        <Box component="div" style={{ marginBottom: "10px" }}>
-          <Typography variant="body1">
-            <strong>Hora:</strong>{" "}
-            {isEditing ? (
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <TimePicker
-                  value={updatedHora}
-                  onChange={(newValue) => setUpdatedHora(newValue)}
-                  slotProps={{ textField: { size: "small" } }}
-                />
-              </LocalizationProvider>
-            ) : (
-              updatedHora.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            )}
-          </Typography>
-        </Box>
+        <Typography variant="body1">
+          <strong>Hora:</strong>{" "}
+          {isEditing ? (
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <TimePicker
+                value={updatedHora}
+                onChange={(newValue) => setUpdatedHora(newValue)}
+                slotProps={{ textField: { size: "small" } }}
+              />
+            </LocalizationProvider>
+          ) : (
+            updatedHora.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          )}
+        </Typography>
         <Typography variant="body1" style={{ marginTop: "10px" }}>
           <strong>Descripción:</strong>{" "}
           {isEditing ? (
@@ -270,7 +282,7 @@ export default function ReservaCard({ cita, onAccion }) {
             <Button
               variant="outlined"
               color="secondary"
-              onClick={() => setIsEditing(false)}
+              onClick={handleCancelEdit}
             >
               Cancelar
             </Button>
@@ -295,7 +307,7 @@ export default function ReservaCard({ cita, onAccion }) {
                 color: "#1976d2",
                 margin: "0 5px",
               }}
-              onClick={() => setIsEditing(true)} // Activar modo edición
+              onClick={handleEdit} // Activar modo edición
             >
               Modificar
             </Button>
