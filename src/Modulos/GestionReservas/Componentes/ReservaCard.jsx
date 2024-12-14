@@ -53,6 +53,19 @@ export default function ReservaCard({ cita, onAccion }) {
 
   const handleSaveChanges = async () => {
     try {
+      const formattedHora = updatedHora.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false, // Formato de 24 horas
+      });
+
+      const body = {
+        hora: formattedHora,
+        descripcion: updatedDescripcion,
+      };
+
+      console.log("Cuerpo de la solicitud:", body);
+
       const response = await fetch(
         `https://localhost:7050/api/Citas/${cita.idCita}`,
         {
@@ -60,19 +73,15 @@ export default function ReservaCard({ cita, onAccion }) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            hora: updatedHora.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            descripcion: updatedDescripcion,
-          }),
+          body: JSON.stringify(body),
         }
       );
+
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-      setIsEditing(false);
+
+      setIsEditing(false); // Finalizar edición
       alert("¡Cita actualizada correctamente!");
     } catch (error) {
       console.error("Error al actualizar la cita:", error);
