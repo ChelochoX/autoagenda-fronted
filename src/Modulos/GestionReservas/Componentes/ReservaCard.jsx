@@ -8,7 +8,12 @@ import {
   Divider,
   IconButton,
   CircularProgress,
+  Chip,
+  TextField,
 } from "@mui/material";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import "../Estilos/ReservaCard.css";
 
@@ -16,6 +21,43 @@ export default function ReservaCard({ cita, onAccion }) {
   const [modalVisible, setModalVisible] = useState(false); // Estado del modal
   const [loading, setLoading] = useState(false); // Estado para el spinner
   const [detalleUsuario, setDetalleUsuario] = useState(null); // Datos del cliente
+  const [isEditing, setIsEditing] = useState(false); // Estado de edición
+  const [updatedHora, setUpdatedHora] = useState(
+    new Date(`1970-01-01T${cita.hora}`)
+  ); // Hora editada
+  const [updatedDescripcion, setUpdatedDescripcion] = useState(
+    cita.descripcion
+  ); // Descripción editada
+
+  // Guardar cambios al backend
+  const handleSaveChanges = async () => {
+    try {
+      const response = await fetch(
+        `https://localhost:7050/api/Citas/${cita.idCita}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            hora: updatedHora.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            descripcion: updatedDescripcion,
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      setIsEditing(false); // Finalizar edición
+      alert("¡Cita actualizada correctamente!");
+    } catch (error) {
+      console.error("Error al actualizar la cita:", error);
+      alert("Hubo un error al guardar los cambios.");
+    }
+  };
 
   // Obtener los datos del cliente
   const handleOpenModal = async () => {
@@ -27,10 +69,6 @@ export default function ReservaCard({ cita, onAccion }) {
       );
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("La respuesta no es un JSON válido.");
       }
       const data = await response.json();
       setDetalleUsuario(data); // Guardar datos del cliente
@@ -73,7 +111,7 @@ export default function ReservaCard({ cita, onAccion }) {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        position: "relative", // Para posicionar el ícono y modal
+        position: "relative",
       }}
     >
       {/* Ícono para mostrar el modal */}
@@ -90,9 +128,7 @@ export default function ReservaCard({ cita, onAccion }) {
       </IconButton>
 
       {/* Modal con animación de cortina */}
-      <Box
-        className={`modal-overlay ${modalVisible ? "show" : "hide"}`} // Clases dinámicas
-      >
+      <Box className={`modal-overlay ${modalVisible ? "show" : "hide"}`}>
         {loading ? (
           <Box style={{ textAlign: "center", marginTop: "50px" }}>
             <CircularProgress />
@@ -138,23 +174,73 @@ export default function ReservaCard({ cita, onAccion }) {
           Tipo de Servicio: {cita.tipoServicio}
         </Typography>
         <Divider style={{ margin: "10px 0" }} />
-        <Typography variant="body1">
-          <strong>Fecha:</strong>{" "}
-          {new Intl.DateTimeFormat("es-ES", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          }).format(new Date(cita.fecha))}
+
+        {/* Chips de Marca, Modelo y Año */}
+        <Box
+          style={{
+            display: "flex",
+            justifyContent: "flex-start",
+            gap: "8px",
+            marginBottom: "10px",
+          }}
+        >
+          <Chip
+            size="small"
+            label={`Marca: ${cita.marca}`}
+            style={{ backgroundColor: "rgba(255, 193, 7, 0.2)", color: "#333" }}
+          />
+          <Chip
+            size="small"
+            label={`Modelo: ${cita.modelo}`}
+            style={{ backgroundColor: "rgba(255, 193, 7, 0.2)", color: "#333" }}
+          />
+          <Chip
+            size="small"
+            label={`Año: ${cita.anho}`}
+            style={{ backgroundColor: "rgba(255, 193, 7, 0.2)", color: "#333" }}
+          />
+        </Box>
+
+        {/* Campos de Hora y Descripción (editables) */}
+        <Box component="div" style={{ marginBottom: "10px" }}>
+          <Typography variant="body1">
+            <strong>Hora:</strong>{" "}
+            {isEditing ? (
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <TimePicker
+                  value={updatedHora}
+                  onChange={(newValue) => setUpdatedHora(newValue)}
+                  slotProps={{ textField: { size: "small" } }}
+                />
+              </LocalizationProvider>
+            ) : (
+              updatedHora.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            )}
+          </Typography>
+        </Box>
+        <Typography variant="body1" style={{ marginTop: "10px" }}>
+          <strong>Descripción:</strong>{" "}
+          {isEditing ? (
+            <TextField
+              value={updatedDescripcion}
+              onChange={(e) => setUpdatedDescripcion(e.target.value)}
+              size="small"
+              fullWidth
+            />
+          ) : (
+            updatedDescripcion
+          )}
         </Typography>
-        <Typography variant="body1">
-          <strong>Hora:</strong> {cita.hora}
-        </Typography>
+
         <Box
           style={{
             display: "inline-block",
             padding: "4px 8px",
             borderRadius: "4px",
-            marginTop: "5px",
+            marginTop: "10px",
             fontWeight: "bold",
             ...getEstadoStyles(cita.estado),
           }}
@@ -163,50 +249,69 @@ export default function ReservaCard({ cita, onAccion }) {
             Estado: {cita.estado}
           </Typography>
         </Box>
-        <Typography variant="body1" style={{ marginTop: "10px" }}>
-          <strong>Descripción:</strong> {cita.descripcion}
-        </Typography>
       </CardContent>
+
       <Box
         style={{
           display: "flex",
-          justifyContent: "space-around",
+          justifyContent: isEditing ? "space-between" : "space-around",
           marginTop: "15px",
         }}
       >
-        <Button
-          variant="outlined"
-          style={{
-            borderColor: "#4caf50",
-            color: "#4caf50",
-            margin: "0 5px",
-          }}
-          onClick={() => onAccion("aprobar", cita)}
-        >
-          Aprobar
-        </Button>
-        <Button
-          variant="outlined"
-          style={{
-            borderColor: "#1976d2",
-            color: "#1976d2",
-            margin: "0 5px",
-          }}
-          onClick={() => onAccion("modificar", cita)}
-        >
-          Modificar
-        </Button>
-        <Button
-          variant="outlined"
-          style={{
-            borderColor: "#f44336",
-            color: "#f44336",
-            margin: "0 5px",
-          }}
-          onClick={() => onAccion("rechazar", cita)}
-        >
-          Rechazar
-        </Button>
+        {isEditing ? (
+          <>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSaveChanges}
+            >
+              Guardar
+            </Button>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={() => setIsEditing(false)}
+            >
+              Cancelar
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="outlined"
+              style={{
+                borderColor: "#4caf50",
+                color: "#4caf50",
+                margin: "0 5px",
+              }}
+              onClick={() => onAccion("aprobar", cita)}
+            >
+              Aprobar
+            </Button>
+            <Button
+              variant="outlined"
+              style={{
+                borderColor: "#1976d2",
+                color: "#1976d2",
+                margin: "0 5px",
+              }}
+              onClick={() => setIsEditing(true)} // Activar modo edición
+            >
+              Modificar
+            </Button>
+            <Button
+              variant="outlined"
+              style={{
+                borderColor: "#f44336",
+                color: "#f44336",
+                margin: "0 5px",
+              }}
+              onClick={() => onAccion("rechazar", cita)}
+            >
+              Rechazar
+            </Button>
+          </>
+        )}
       </Box>
     </Card>
   );
