@@ -32,6 +32,7 @@ export default function ReservaCard({ cita, onAccion }) {
     cita.descripcion
   );
 
+  // Nuevo: Estados para valores originales
   const [originalHora, setOriginalHora] = useState(
     new Date(`1970-01-01T${cita.hora}`)
   );
@@ -39,7 +40,13 @@ export default function ReservaCard({ cita, onAccion }) {
     cita.descripcion
   );
 
+  // Estado para las alertas
   const [alert, setAlert] = useState({ type: "", message: "", visible: false });
+  const [estadoCita, setEstadoCita] = useState(cita.estado);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Determinar si los botones deben estar deshabilitados
+  const botonesDeshabilitados = estadoCita !== "pendiente";
 
   const handleEdit = () => {
     setOriginalHora(updatedHora);
@@ -52,6 +59,7 @@ export default function ReservaCard({ cita, onAccion }) {
     setUpdatedDescripcion(originalDescripcion);
     setIsEditing(false);
 
+    // Mostrar alerta
     setAlert({
       type: "info",
       message: "Cambios descartados.",
@@ -89,6 +97,7 @@ export default function ReservaCard({ cita, onAccion }) {
 
       setIsEditing(false);
 
+      // Mostrar alerta de éxito
       setAlert({
         type: "success",
         message: "¡Cita actualizada correctamente!",
@@ -97,11 +106,51 @@ export default function ReservaCard({ cita, onAccion }) {
     } catch (error) {
       console.error("Error al actualizar la cita:", error);
 
+      // Mostrar alerta de error
       setAlert({
         type: "error",
         message: "Hubo un error al guardar los cambios.",
         visible: true,
       });
+    }
+  };
+
+  // Función para actualizar el estado en el servidor
+  const handleActualizarEstado = async (nuevoEstado) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(
+        `https://localhost:7050/api/Citas/${cita.idCita}/estado`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(nuevoEstado),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      // Actualizamos el estado local para reflejar el cambio
+      setEstadoCita(nuevoEstado);
+      setAlert({
+        type: "success",
+        message: `El estado ha sido actualizado a '${nuevoEstado}'.`,
+        visible: true,
+      });
+
+      // Llamar a onActualizacion si está definido
+      if (typeof onActualizacion === "function") onActualizacion();
+    } catch (error) {
+      console.error("Error al actualizar el estado:", error);
+      setAlert({
+        type: "error",
+        message: "Error al actualizar el estado de la cita.",
+        visible: true,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -162,12 +211,26 @@ export default function ReservaCard({ cita, onAccion }) {
           <Alert
             severity={alert.type}
             action={
-              <Button
-                size="small"
-                onClick={() => setAlert({ ...alert, visible: false })}
+              <Box
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginTop: "10px",
+                }}
               >
-                Cerrar
-              </Button>
+                <Button
+                  size="small"
+                  onClick={() => setAlert({ ...alert, visible: false })}
+                  style={{
+                    fontSize: "12px",
+                    color: "#1976d2",
+                    border: "1px solid #1976d2",
+                  }}
+                >
+                  Cerrar
+                </Button>
+              </Box>
             }
           >
             <AlertTitle>
@@ -262,9 +325,11 @@ export default function ReservaCard({ cita, onAccion }) {
           />
         </Box>
 
-        <Box>
-          <Typography variant="body1" component="span">
-            <strong>Hora:</strong>{" "}
+        <Box display="flex" alignItems="center" mb={1}>
+          {" "}
+          {/* Usamos <Box> en lugar de Typography */}
+          <Typography variant="body1" component="span" fontWeight="bold">
+            Hora:
           </Typography>
           {isEditing ? (
             <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -275,16 +340,18 @@ export default function ReservaCard({ cita, onAccion }) {
               />
             </LocalizationProvider>
           ) : (
-            updatedHora.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
+            <Typography variant="body1" component="span" sx={{ ml: 1 }}>
+              {updatedHora.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Typography>
           )}
         </Box>
 
-        <Box style={{ marginTop: "10px" }}>
-          <Typography variant="body1" component="span">
-            <strong>Descripción:</strong>{" "}
+        <Box display="flex" flexDirection="column" mt={1}>
+          <Typography variant="body1" component="span" fontWeight="bold">
+            Descripción:
           </Typography>
           {isEditing ? (
             <TextField
@@ -294,7 +361,9 @@ export default function ReservaCard({ cita, onAccion }) {
               fullWidth
             />
           ) : (
-            updatedDescripcion
+            <Typography variant="body1" component="span" sx={{ mt: 1 }}>
+              {updatedDescripcion}
+            </Typography>
           )}
         </Box>
 
@@ -305,11 +374,11 @@ export default function ReservaCard({ cita, onAccion }) {
             borderRadius: "4px",
             marginTop: "10px",
             fontWeight: "bold",
-            ...getEstadoStyles(cita.estado),
+            ...getEstadoStyles(estadoCita),
           }}
         >
           <Typography variant="body1" style={{ fontWeight: "bold" }}>
-            Estado: {cita.estado}
+            Estado: {estadoCita}
           </Typography>
         </Box>
       </CardContent>
@@ -343,33 +412,46 @@ export default function ReservaCard({ cita, onAccion }) {
             <Button
               variant="outlined"
               style={{
-                borderColor: "#4caf50",
-                color: "#4caf50",
+                borderColor: botonesDeshabilitados ? "#ccc" : "#4caf50",
+                color: botonesDeshabilitados ? "#aaa" : "#4caf50",
+                backgroundColor: botonesDeshabilitados
+                  ? "#f9f9f9"
+                  : "transparent",
                 margin: "0 5px",
               }}
-              onClick={() => onAccion("aprobar", cita)}
+              disabled={botonesDeshabilitados || isLoading}
+              onClick={() => handleActualizarEstado("aprobado")}
             >
               Aprobar
             </Button>
+
             <Button
               variant="outlined"
               style={{
-                borderColor: "#1976d2",
-                color: "#1976d2",
+                borderColor: estadoCita !== "pendiente" ? "#ccc" : "#1976d2",
+                color: estadoCita !== "pendiente" ? "#aaa" : "#1976d2",
+                backgroundColor:
+                  estadoCita !== "pendiente" ? "#f9f9f9" : "transparent",
                 margin: "0 5px",
               }}
+              disabled={estadoCita !== "pendiente" || isLoading}
               onClick={handleEdit}
             >
               Modificar
             </Button>
+
             <Button
               variant="outlined"
               style={{
-                borderColor: "#f44336",
-                color: "#f44336",
+                borderColor: botonesDeshabilitados ? "#ccc" : "#f44336",
+                color: botonesDeshabilitados ? "#aaa" : "#f44336",
+                backgroundColor: botonesDeshabilitados
+                  ? "#f9f9f9"
+                  : "transparent",
                 margin: "0 5px",
               }}
-              onClick={() => onAccion("rechazar", cita)}
+              disabled={botonesDeshabilitados || isLoading}
+              onClick={() => handleActualizarEstado("rechazado")}
             >
               Rechazar
             </Button>
