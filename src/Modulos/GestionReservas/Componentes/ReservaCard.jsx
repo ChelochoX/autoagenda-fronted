@@ -18,9 +18,10 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { useNavigate } from "react-router-dom";
 import "../Estilos/ReservaCard.css";
 
-export default function ReservaCard({ cita, onAccion }) {
+export default function ReservaCard({ cita, onActualizacion }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [detalleUsuario, setDetalleUsuario] = useState(null);
@@ -44,6 +45,9 @@ export default function ReservaCard({ cita, onAccion }) {
   const [alert, setAlert] = useState({ type: "", message: "", visible: false });
   const [estadoCita, setEstadoCita] = useState(cita.estado);
   const [isLoading, setIsLoading] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+
+  const navigate = useNavigate();
 
   // Determinar si los botones deben estar deshabilitados
   const botonesDeshabilitados = estadoCita !== "pendiente";
@@ -115,38 +119,33 @@ export default function ReservaCard({ cita, onAccion }) {
     }
   };
 
-  // Función para actualizar el estado en el servidor
-  const handleActualizarEstado = async (nuevoEstado) => {
+  // Función para manejar la aprobación de la cita y creación de ficha técnica
+  const handleAprobarCita = async () => {
+    if (isLoading || isApproved) return;
+
     try {
       setIsLoading(true);
-      const response = await fetch(
+
+      const estadoResponse = await fetch(
         `https://localhost:7050/api/Citas/${cita.idCita}/estado`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(nuevoEstado),
+          body: JSON.stringify("aprobado"),
         }
       );
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      if (!estadoResponse.ok) {
+        throw new Error(
+          `Error al actualizar el estado de la cita: ${estadoResponse.status}`
+        );
       }
 
-      // Actualizamos el estado local para reflejar el cambio
-      setEstadoCita(nuevoEstado);
-      setAlert({
-        type: "success",
-        message: `El estado ha sido actualizado a '${nuevoEstado}'.`,
-        visible: true,
-      });
-
-      // Llamar a onActualizacion si está definido
-      if (typeof onActualizacion === "function") onActualizacion();
+      navigate(`/gestionfichas`, { state: { idCita: cita.idCita } });
     } catch (error) {
-      console.error("Error al actualizar el estado:", error);
       setAlert({
         type: "error",
-        message: "Error al actualizar el estado de la cita.",
+        message: "Hubo un error al aprobar la cita. Inténtalo de nuevo.",
         visible: true,
       });
     } finally {
@@ -420,9 +419,9 @@ export default function ReservaCard({ cita, onAccion }) {
                 margin: "0 5px",
               }}
               disabled={botonesDeshabilitados || isLoading}
-              onClick={() => handleActualizarEstado("aprobado")}
+              onClick={handleAprobarCita}
             >
-              Aprobar
+              {isLoading ? "Procesando..." : "Aprobar"}
             </Button>
 
             <Button
