@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -9,13 +9,33 @@ import {
   Stack,
   TextField,
   Button,
+  MenuItem,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import EventIcon from "@mui/icons-material/Event";
 import BuildIcon from "@mui/icons-material/Build";
+import { obtenerMecanicos } from "../services/mecanicoService";
 
 const FichaForm = ({ ficha, onFichaActualizada }) => {
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const formatCurrency = (value) => {
+    if (!value) return "N/A";
+    return new Intl.NumberFormat("es-ES", {
+      style: "currency",
+      currency: "USD",
+    }).format(value);
+  };
+
   const [kilometrajeIngreso, setKilometrajeIngreso] = useState(
     ficha.kilometrajeIngreso || ""
   );
@@ -25,27 +45,47 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
   const [detallesServicio, setDetallesServicio] = useState(
     ficha.detallesServicio || ""
   );
-  const [mecanicoResponsable, setMecanicoResponsable] = useState(
+  // Lista de mecánicos desde la base de datos
+  const [mecanicos, setMecanicos] = useState([]);
+  const [mecanicoSeleccionado, setMecanicoSeleccionado] = useState(
     ficha.mecanicoResponsable || ""
   );
+
+  // Traer mecánicos desde el backend
+  useEffect(() => {
+    const fetchMecanicos = async () => {
+      try {
+        const data = await obtenerMecanicos();
+        setMecanicos(data); // Guardar la lista en el estado
+      } catch (error) {
+        console.error("Error al obtener los mecánicos:", error);
+      }
+    };
+
+    fetchMecanicos();
+  }, []);
 
   const handleGuardar = () => {
     const fichaActualizada = {
       ...ficha,
-      kilometrajeIngreso,
-      kilometrajeProximo,
+      kilometrajeIngreso: parseInt(kilometrajeIngreso.replace(/\./g, ""), 10),
+      kilometrajeProximo: parseInt(kilometrajeProximo.replace(/\./g, ""), 10),
       detallesServicio,
-      mecanicoResponsable,
+      mecanicoResponsable: mecanicoSeleccionado, // Actualizar correctamente el mecánico seleccionado
     };
     onFichaActualizada(fichaActualizada);
   };
 
   const handleCancelar = () => {
-    // Restaurar valores iniciales
     setKilometrajeIngreso(ficha.kilometrajeIngreso || "");
     setKilometrajeProximo(ficha.kilometrajeProximo || "");
     setDetallesServicio(ficha.detallesServicio || "");
-    setMecanicoResponsable(ficha.mecanicoResponsable || "");
+    setMecanicoSeleccionado(ficha.mecanicoResponsable || "");
+  };
+
+  const formatGuarani = (value) => {
+    if (!value) return "N/A";
+    return new Intl.NumberFormat("es-PY").format(value) + " Gs.";
   };
 
   return (
@@ -59,7 +99,6 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
         boxShadow: "0px 4px 8px rgba(0,0,0,0.1)",
       }}
     >
-      {/* Título principal */}
       <Typography
         variant="h5"
         gutterBottom
@@ -75,18 +114,9 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
         Gestión de Ficha Técnica
       </Typography>
 
-      {/* Grid de Tarjetas */}
       <Grid container spacing={2}>
-        {/* Tarjeta: Información del Cliente */}
         <Grid item xs={12} md={6}>
-          <Card
-            sx={{
-              height: "100%",
-              boxShadow: 2,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+          <Card sx={{ height: "100%", boxShadow: 2 }}>
             <CardHeader
               avatar={
                 <PersonIcon sx={{ color: "#ff9800", fontSize: "36px" }} />
@@ -116,16 +146,8 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
           </Card>
         </Grid>
 
-        {/* Tarjeta: Información del Vehículo */}
         <Grid item xs={12} md={6}>
-          <Card
-            sx={{
-              height: "100%",
-              boxShadow: 2,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+          <Card sx={{ height: "100%", boxShadow: 2 }}>
             <CardHeader
               avatar={
                 <DirectionsCarIcon
@@ -160,7 +182,6 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
           </Card>
         </Grid>
 
-        {/* Tarjeta: Datos de la Cita */}
         <Grid item xs={12}>
           <Card sx={{ boxShadow: 2 }}>
             <CardHeader
@@ -177,7 +198,7 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
             <CardContent>
               <Stack spacing={1}>
                 <Typography variant="body2">
-                  <strong>Fecha:</strong> {ficha.fechaCita || "N/A"}
+                  <strong>Fecha:</strong> {formatDate(ficha.fechaCita)}
                 </Typography>
                 <Typography variant="body2">
                   <strong>Hora:</strong> {ficha.horaCita || "N/A"}
@@ -189,12 +210,19 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
                   <strong>Tipo de Servicio:</strong>{" "}
                   {ficha.tipoServicio || "N/A"}
                 </Typography>
+                <Typography variant="body2">
+                  <strong>Descripción del Servicio:</strong>{" "}
+                  {ficha.descripcionServicio || "N/A"}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Costo del Servicio:</strong>{" "}
+                  {formatGuarani(ficha.costoServicio)}
+                </Typography>
               </Stack>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Tarjeta: Detalles de la Ficha Técnica */}
         <Grid item xs={12}>
           <Card sx={{ boxShadow: 2 }}>
             <CardHeader
@@ -210,11 +238,31 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
             />
             <CardContent>
               <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    select
+                    label="Mecánico Responsable"
+                    value={mecanicoSeleccionado}
+                    onChange={(e) => setMecanicoSeleccionado(e.target.value)}
+                    fullWidth
+                  >
+                    {mecanicos.map((mecanico) => (
+                      <MenuItem
+                        key={mecanico.idMecanico}
+                        value={`${mecanico.nombre} ${mecanico.apellido}`}
+                      >
+                        {`${mecanico.nombre} ${mecanico.apellido}`}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Kilometraje de Ingreso"
                     value={kilometrajeIngreso}
-                    onChange={(e) => setKilometrajeIngreso(e.target.value)}
+                    onChange={(e) =>
+                      setKilometrajeIngreso(e.target.value.replace(/\D/g, ""))
+                    }
                     fullWidth
                   />
                 </Grid>
@@ -222,7 +270,9 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
                   <TextField
                     label="Kilometraje Próximo"
                     value={kilometrajeProximo}
-                    onChange={(e) => setKilometrajeProximo(e.target.value)}
+                    onChange={(e) =>
+                      setKilometrajeProximo(e.target.value.replace(/\D/g, ""))
+                    }
                     fullWidth
                   />
                 </Grid>
@@ -236,21 +286,12 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
                     rows={3}
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Mecánico Responsable"
-                    value={mecanicoResponsable}
-                    onChange={(e) => setMecanicoResponsable(e.target.value)}
-                    fullWidth
-                  />
-                </Grid>
               </Grid>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Botones */}
       <Stack direction="row" justifyContent="flex-end" spacing={2} mt={3}>
         <Button variant="contained" color="primary" onClick={handleGuardar}>
           Guardar

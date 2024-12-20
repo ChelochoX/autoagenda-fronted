@@ -1,9 +1,9 @@
-const API_URL = "https://localhost:7050/api/FichaTecnica";
+import { BASE_URL } from "../../../config";
 
-// Crear ficha técnica
 export const crearFichaTecnica = async (request) => {
   try {
-    const response = await fetch(`${API_URL}/crear`, {
+    console.log("URL usada:", `${BASE_URL}/api/FichaTecnica/crear`); // Para depuración
+    const response = await fetch(`${BASE_URL}/api/FichaTecnica/crear`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -15,7 +15,6 @@ export const crearFichaTecnica = async (request) => {
       throw new Error(`Error al crear la ficha técnica: ${response.status}`);
     }
 
-    // Retornar el DTO completo del backend
     return await response.json();
   } catch (error) {
     console.error("Error al crear la ficha técnica:", error);
