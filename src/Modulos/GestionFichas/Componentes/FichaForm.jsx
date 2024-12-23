@@ -15,7 +15,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import EventIcon from "@mui/icons-material/Event";
 import BuildIcon from "@mui/icons-material/Build";
-import { obtenerMecanicos } from "../services/mecanicoService";
+import { obtenerMecanicos } from "../Services/mecanicoService";
 
 const FichaForm = ({ ficha, onFichaActualizada }) => {
   const formatDate = (dateString) => {

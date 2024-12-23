@@ -2,7 +2,6 @@ import { BASE_URL } from "../../../config";
 
 export const crearFichaTecnica = async (request) => {
   try {
-    console.log("URL usada:", `${BASE_URL}/api/FichaTecnica/crear`); // Para depuración
     const response = await fetch(`${BASE_URL}/api/FichaTecnica/crear`, {
       method: "POST",
       headers: {
