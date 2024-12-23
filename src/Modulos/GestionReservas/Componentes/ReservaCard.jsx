@@ -18,6 +18,7 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useNavigate } from "react-router-dom";
 import "../Estilos/ReservaCard.css";
 
@@ -189,6 +190,11 @@ export default function ReservaCard({ cita, onActualizacion }) {
       default:
         return { backgroundColor: "#f0f0f0", color: "#000" };
     }
+  };
+
+  const handleIrFicha = () => {
+    // Redirigir a la página de gestión de fichas con el idCita
+    navigate(`/gestionfichas/${cita.idCita}`);
   };
 
   return (
