@@ -18,7 +18,7 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import DescriptionIcon from "@mui/icons-material/Description";
 import { useNavigate } from "react-router-dom";
 import "../Estilos/ReservaCard.css";
 
@@ -193,8 +193,14 @@ export default function ReservaCard({ cita, onActualizacion }) {
   };
 
   const handleIrFicha = () => {
+    console.log("ID de la cita enviada:", cita.idCita); // Log para verificar el ID
+    if (!cita.idCita) {
+      console.error("No se encontró un ID de cita válido.");
+      return;
+    }
+
     // Redirigir a la página de gestión de fichas con el idCita
-    navigate(`/gestionfichas/${cita.idCita}`);
+    navigate(`/gestionfichas`, { state: { idCita: cita.idCita } });
   };
 
   return (
@@ -308,8 +314,8 @@ export default function ReservaCard({ cita, onActualizacion }) {
         <Box
           style={{
             display: "flex",
-            justifyContent: "flex-start",
-            gap: "8px",
+            flexWrap: "wrap", // Permite que los chips se ajusten automáticamente
+            gap: "8px", // Espaciado entre los chips
             marginBottom: "10px",
           }}
         >
@@ -391,8 +397,8 @@ export default function ReservaCard({ cita, onActualizacion }) {
       <Box
         style={{
           display: "flex",
-          justifyContent: isEditing ? "space-between" : "space-around",
-          marginTop: "15px",
+          flexDirection: "column", // Coloca los elementos de forma vertical para mejorar la estructura
+          marginTop: "10px",
         }}
       >
         {isEditing ? (
@@ -414,52 +420,77 @@ export default function ReservaCard({ cita, onActualizacion }) {
           </>
         ) : (
           <>
-            <Button
-              variant="outlined"
-              style={{
-                borderColor: botonesDeshabilitados ? "#ccc" : "#4caf50",
-                color: botonesDeshabilitados ? "#aaa" : "#4caf50",
-                backgroundColor: botonesDeshabilitados
-                  ? "#f9f9f9"
-                  : "transparent",
-                margin: "0 5px",
-              }}
-              disabled={botonesDeshabilitados || isLoading}
-              onClick={handleAprobarCita}
-            >
-              {isLoading ? "Procesando..." : "Aprobar"}
-            </Button>
+            {/* Ícono de ficha técnica separado, visible solo si el estado es aprobado */}
+            {estadoCita === "aprobado" && (
+              <IconButton
+                onClick={handleIrFicha}
+                style={{
+                  alignSelf: "flex-end", // Alinea el ícono a la derecha
+                  marginBottom: "10px", // Espaciado respecto a los botones
+                  color: "#4caf50", // Verde para indicar estado aprobado
+                }}
+              >
+                <DescriptionIcon />
+              </IconButton>
+            )}
 
-            <Button
-              variant="outlined"
+            {/* Botones de acciones (responsivos) */}
+            <Box
               style={{
-                borderColor: estadoCita !== "pendiente" ? "#ccc" : "#1976d2",
-                color: estadoCita !== "pendiente" ? "#aaa" : "#1976d2",
-                backgroundColor:
-                  estadoCita !== "pendiente" ? "#f9f9f9" : "transparent",
-                margin: "0 5px",
+                display: "flex",
+                flexWrap: "wrap", // Permite que los botones se ajusten en varias filas si es necesario
+                justifyContent: "center", // Centra los botones
+                gap: "10px", // Espacio entre los botones
               }}
-              disabled={estadoCita !== "pendiente" || isLoading}
-              onClick={handleEdit}
             >
-              Modificar
-            </Button>
-
-            <Button
-              variant="outlined"
-              style={{
-                borderColor: botonesDeshabilitados ? "#ccc" : "#f44336",
-                color: botonesDeshabilitados ? "#aaa" : "#f44336",
-                backgroundColor: botonesDeshabilitados
-                  ? "#f9f9f9"
-                  : "transparent",
-                margin: "0 5px",
-              }}
-              disabled={botonesDeshabilitados || isLoading}
-              onClick={() => handleActualizarEstado("rechazado")}
-            >
-              Rechazar
-            </Button>
+              <Button
+                variant="outlined"
+                style={{
+                  flex: "1 1 calc(33.33% - 10px)", // Tamaño dinámico basado en el espacio disponible
+                  minWidth: "100px", // Ancho mínimo para que no se colapsen
+                  borderColor: botonesDeshabilitados ? "#ccc" : "#4caf50",
+                  color: botonesDeshabilitados ? "#aaa" : "#4caf50",
+                  backgroundColor: botonesDeshabilitados
+                    ? "#f9f9f9"
+                    : "transparent",
+                }}
+                disabled={botonesDeshabilitados || isLoading}
+                onClick={handleAprobarCita}
+              >
+                {isLoading ? "Procesando..." : "Aprobar"}
+              </Button>
+              <Button
+                variant="outlined"
+                style={{
+                  flex: "1 1 calc(33.33% - 10px)", // Tamaño dinámico basado en el espacio disponible
+                  minWidth: "100px",
+                  borderColor: estadoCita !== "pendiente" ? "#ccc" : "#1976d2",
+                  color: estadoCita !== "pendiente" ? "#aaa" : "#1976d2",
+                  backgroundColor:
+                    estadoCita !== "pendiente" ? "#f9f9f9" : "transparent",
+                }}
+                disabled={estadoCita !== "pendiente" || isLoading}
+                onClick={handleEdit}
+              >
+                Modificar
+              </Button>
+              <Button
+                variant="outlined"
+                style={{
+                  flex: "1 1 calc(33.33% - 10px)", // Tamaño dinámico basado en el espacio disponible
+                  minWidth: "100px",
+                  borderColor: botonesDeshabilitados ? "#ccc" : "#f44336",
+                  color: botonesDeshabilitados ? "#aaa" : "#f44336",
+                  backgroundColor: botonesDeshabilitados
+                    ? "#f9f9f9"
+                    : "transparent",
+                }}
+                disabled={botonesDeshabilitados || isLoading}
+                onClick={() => handleActualizarEstado("rechazado")}
+              >
+                Rechazar
+              </Button>
+            </Box>
           </>
         )}
       </Box>

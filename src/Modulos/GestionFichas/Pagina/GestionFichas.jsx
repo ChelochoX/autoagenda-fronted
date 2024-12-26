@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { crearFichaTecnica } from "../Services/fichaService"; // Servicio para crear ficha técnica
 import FichaForm from "../Componentes/FichaForm"; // Formulario de ficha técnica
 import { Box, CircularProgress, Typography, Alert } from "@mui/material";
 
 const GestionFichas = () => {
   const location = useLocation();
-  const { idCita } = location.state || {}; // Obtener idCita desde el estado pasado
+  const { idCita: idCitaFromState } = location.state || {}; // Intentar obtener idCita desde el estado
+  const { idCita: idCitaFromParams } = useParams(); // Intentar obtener idCita desde los parámetros de la URL
+
+  const idCita = idCitaFromState || idCitaFromParams; // Usar el que esté disponible
+
   const [ficha, setFicha] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
