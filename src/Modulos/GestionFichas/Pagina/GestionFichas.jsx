@@ -18,7 +18,6 @@ const GestionFichas = () => {
   useEffect(() => {
     const crearFicha = async () => {
       if (!idCita) {
-        console.error("El parámetro idCita no fue proporcionado.");
         setError("No se puede crear la ficha técnica sin un ID de cita.");
         setLoading(false);
         return;
@@ -36,7 +35,6 @@ const GestionFichas = () => {
         // Solo guarda si no es una llamada cancelada
         setFicha(fichaTecnicaDTO);
       } catch (err) {
-        console.error("Error al crear la ficha técnica:", err);
         setError("Hubo un error al crear la ficha técnica.");
       } finally {
         setLoading(false);

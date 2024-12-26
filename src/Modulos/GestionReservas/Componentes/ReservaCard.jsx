@@ -34,7 +34,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
     cita.descripcion
   );
 
-  // Nuevo: Estados para valores originales
   const [originalHora, setOriginalHora] = useState(
     new Date(`1970-01-01T${cita.hora}`)
   );
@@ -42,7 +41,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
     cita.descripcion
   );
 
-  // Estado para las alertas
   const [alert, setAlert] = useState({ type: "", message: "", visible: false });
   const [estadoCita, setEstadoCita] = useState(cita.estado);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +48,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
 
   const navigate = useNavigate();
 
-  // Determinar si los botones deben estar deshabilitados
   const botonesDeshabilitados = estadoCita !== "pendiente";
 
   const handleEdit = () => {
@@ -64,7 +61,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
     setUpdatedDescripcion(originalDescripcion);
     setIsEditing(false);
 
-    // Mostrar alerta
     setAlert({
       type: "info",
       message: "Cambios descartados.",
@@ -102,7 +98,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
 
       setIsEditing(false);
 
-      // Mostrar alerta de éxito
       setAlert({
         type: "success",
         message: "¡Cita actualizada correctamente!",
@@ -111,7 +106,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
     } catch (error) {
       console.error("Error al actualizar la cita:", error);
 
-      // Mostrar alerta de error
       setAlert({
         type: "error",
         message: "Hubo un error al guardar los cambios.",
@@ -120,7 +114,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
     }
   };
 
-  // Función para manejar la aprobación de la cita y creación de ficha técnica
   const handleAprobarCita = async () => {
     if (isLoading || isApproved) return;
 
@@ -154,6 +147,43 @@ export default function ReservaCard({ cita, onActualizacion }) {
     }
   };
 
+  const handleActualizarEstado = async (nuevoEstado) => {
+    try {
+      const response = await fetch(
+        `https://localhost:7050/api/Citas/${cita.idCita}/estado`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(nuevoEstado),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Error al actualizar el estado de la cita: ${response.status}`
+        );
+      }
+
+      setEstadoCita(nuevoEstado);
+
+      setAlert({
+        type: "success",
+        message: `Estado cambiado a ${nuevoEstado}.`,
+        visible: true,
+      });
+    } catch (error) {
+      console.error("Error al actualizar el estado:", error);
+
+      setAlert({
+        type: "error",
+        message: "Hubo un error al actualizar el estado.",
+        visible: true,
+      });
+    }
+  };
+
   const handleOpenModal = async () => {
     setModalVisible(true);
     setLoading(true);
@@ -167,7 +197,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
       const data = await response.json();
       setDetalleUsuario(data);
     } catch (error) {
-      console.error("Error en la llamada al endpoint:", error);
       setDetalleUsuario(null);
     } finally {
       setLoading(false);
@@ -193,13 +222,11 @@ export default function ReservaCard({ cita, onActualizacion }) {
   };
 
   const handleIrFicha = () => {
-    console.log("ID de la cita enviada:", cita.idCita); // Log para verificar el ID
     if (!cita.idCita) {
       console.error("No se encontró un ID de cita válido.");
       return;
     }
 
-    // Redirigir a la página de gestión de fichas con el idCita
     navigate(`/gestionfichas`, { state: { idCita: cita.idCita } });
   };
 
@@ -314,8 +341,8 @@ export default function ReservaCard({ cita, onActualizacion }) {
         <Box
           style={{
             display: "flex",
-            flexWrap: "wrap", // Permite que los chips se ajusten automáticamente
-            gap: "8px", // Espaciado entre los chips
+            flexWrap: "wrap",
+            gap: "8px",
             marginBottom: "10px",
           }}
         >
@@ -337,8 +364,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
         </Box>
 
         <Box display="flex" alignItems="center" mb={1}>
-          {" "}
-          {/* Usamos <Box> en lugar de Typography */}
           <Typography variant="body1" component="span" fontWeight="bold">
             Hora:
           </Typography>
@@ -380,24 +405,44 @@ export default function ReservaCard({ cita, onActualizacion }) {
 
         <Box
           style={{
-            display: "inline-block",
-            padding: "4px 8px",
-            borderRadius: "4px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             marginTop: "10px",
-            fontWeight: "bold",
-            ...getEstadoStyles(estadoCita),
           }}
         >
-          <Typography variant="body1" style={{ fontWeight: "bold" }}>
-            Estado: {estadoCita}
-          </Typography>
+          <Box
+            style={{
+              display: "inline-block",
+              padding: "4px 8px",
+              borderRadius: "4px",
+              fontWeight: "bold",
+              ...getEstadoStyles(estadoCita),
+            }}
+          >
+            <Typography variant="body1" style={{ fontWeight: "bold" }}>
+              Estado: {estadoCita}
+            </Typography>
+          </Box>
+
+          {estadoCita === "aprobado" && (
+            <IconButton
+              onClick={handleIrFicha}
+              style={{
+                color: "#4caf50",
+              }}
+            >
+              <DescriptionIcon />
+            </IconButton>
+          )}
         </Box>
       </CardContent>
 
       <Box
         style={{
           display: "flex",
-          flexDirection: "column", // Coloca los elementos de forma vertical para mejorar la estructura
+          justifyContent: "center",
+          gap: "15px",
           marginTop: "10px",
         }}
       >
@@ -420,77 +465,47 @@ export default function ReservaCard({ cita, onActualizacion }) {
           </>
         ) : (
           <>
-            {/* Ícono de ficha técnica separado, visible solo si el estado es aprobado */}
-            {estadoCita === "aprobado" && (
-              <IconButton
-                onClick={handleIrFicha}
-                style={{
-                  alignSelf: "flex-end", // Alinea el ícono a la derecha
-                  marginBottom: "10px", // Espaciado respecto a los botones
-                  color: "#4caf50", // Verde para indicar estado aprobado
-                }}
-              >
-                <DescriptionIcon />
-              </IconButton>
-            )}
-
-            {/* Botones de acciones (responsivos) */}
-            <Box
+            <Button
+              variant="outlined"
               style={{
-                display: "flex",
-                flexWrap: "wrap", // Permite que los botones se ajusten en varias filas si es necesario
-                justifyContent: "center", // Centra los botones
-                gap: "10px", // Espacio entre los botones
+                borderColor: botonesDeshabilitados ? "#ccc" : "#4caf50",
+                color: botonesDeshabilitados ? "#aaa" : "#4caf50",
+                backgroundColor: botonesDeshabilitados
+                  ? "#f9f9f9"
+                  : "transparent",
               }}
+              disabled={botonesDeshabilitados || isLoading}
+              onClick={handleAprobarCita}
             >
-              <Button
-                variant="outlined"
-                style={{
-                  flex: "1 1 calc(33.33% - 10px)", // Tamaño dinámico basado en el espacio disponible
-                  minWidth: "100px", // Ancho mínimo para que no se colapsen
-                  borderColor: botonesDeshabilitados ? "#ccc" : "#4caf50",
-                  color: botonesDeshabilitados ? "#aaa" : "#4caf50",
-                  backgroundColor: botonesDeshabilitados
-                    ? "#f9f9f9"
-                    : "transparent",
-                }}
-                disabled={botonesDeshabilitados || isLoading}
-                onClick={handleAprobarCita}
-              >
-                {isLoading ? "Procesando..." : "Aprobar"}
-              </Button>
-              <Button
-                variant="outlined"
-                style={{
-                  flex: "1 1 calc(33.33% - 10px)", // Tamaño dinámico basado en el espacio disponible
-                  minWidth: "100px",
-                  borderColor: estadoCita !== "pendiente" ? "#ccc" : "#1976d2",
-                  color: estadoCita !== "pendiente" ? "#aaa" : "#1976d2",
-                  backgroundColor:
-                    estadoCita !== "pendiente" ? "#f9f9f9" : "transparent",
-                }}
-                disabled={estadoCita !== "pendiente" || isLoading}
-                onClick={handleEdit}
-              >
-                Modificar
-              </Button>
-              <Button
-                variant="outlined"
-                style={{
-                  flex: "1 1 calc(33.33% - 10px)", // Tamaño dinámico basado en el espacio disponible
-                  minWidth: "100px",
-                  borderColor: botonesDeshabilitados ? "#ccc" : "#f44336",
-                  color: botonesDeshabilitados ? "#aaa" : "#f44336",
-                  backgroundColor: botonesDeshabilitados
-                    ? "#f9f9f9"
-                    : "transparent",
-                }}
-                disabled={botonesDeshabilitados || isLoading}
-                onClick={() => handleActualizarEstado("rechazado")}
-              >
-                Rechazar
-              </Button>
-            </Box>
+              {isLoading ? "Procesando..." : "Aprobar"}
+            </Button>
+            <Button
+              variant="outlined"
+              style={{
+                borderColor: estadoCita !== "pendiente" ? "#ccc" : "#1976d2",
+                color: estadoCita !== "pendiente" ? "#aaa" : "#1976d2",
+                backgroundColor:
+                  estadoCita !== "pendiente" ? "#f9f9f9" : "transparent",
+              }}
+              disabled={estadoCita !== "pendiente" || isLoading}
+              onClick={handleEdit}
+            >
+              Modificar
+            </Button>
+            <Button
+              variant="outlined"
+              style={{
+                borderColor: botonesDeshabilitados ? "#ccc" : "#f44336",
+                color: botonesDeshabilitados ? "#aaa" : "#f44336",
+                backgroundColor: botonesDeshabilitados
+                  ? "#f9f9f9"
+                  : "transparent",
+              }}
+              disabled={botonesDeshabilitados || isLoading}
+              onClick={() => handleActualizarEstado("rechazado")}
+            >
+              Rechazar
+            </Button>
           </>
         )}
       </Box>
