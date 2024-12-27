@@ -7,49 +7,36 @@ import AccionesReservas from "../Componentes/AccionesReservas";
 import ModalReservar from "../Componentes/ModalReservar";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import dayjs from "dayjs";
+import { obtenerCitasPorFechaYUsuario } from "../Services/citasService"; // Importar el servicio
 
 const Agendamiento = () => {
-  const [modalOpen, setModalOpen] = useState(false); // Control del modal
+  const [modalOpen, setModalOpen] = useState(false);
   const [fechaSeleccionada, setFechaSeleccionada] = useState(
     dayjs().format("YYYY-MM-DD")
-  ); // Fecha inicial
+  );
   const [citas, setCitas] = useState([]);
   const [modalMode, setModalMode] = useState("crear"); // "crear" o "editar"
-  const [citaSeleccionada, setCitaSeleccionada] = useState(null); // Cita a editar
+  const [citaSeleccionada, setCitaSeleccionada] = useState(null);
 
-  const idUsuario = 2;
+  const idUsuario = 2; // Usuario fijo, reemplazar según la lógica de autenticación
 
-  // Función para obtener citas desde el backend
+  // Cargar citas desde el backend
   const cargarCitas = async (fecha, idUsuario) => {
     try {
-      const response = await fetch(
-        `https://localhost:7050/api/Citas/buscarcita?fecha=${fecha}&idUsuario=${idUsuario}`
-      );
-
-      if (response.status === 404) {
-        // Si el servidor retorna un 404 (sin datos), vaciamos las citas
-        setCitas([]);
-        return;
-      }
-
-      if (!response.ok) {
-        // Para otros errores (500, etc.), lanzar una excepción
-        throw new Error("Error al cargar las citas");
-      }
-
-      // Si la respuesta es válida, actualizamos las citas
-      const data = await response.json();
-      setCitas(data);
+      const data = await obtenerCitasPorFechaYUsuario(fecha, idUsuario); // Llamada al servicio
+      setCitas(data); // Actualizar las citas en el estado
     } catch (error) {
-      setCitas([]);
+      console.error("Error al cargar las citas:", error);
+      setCitas([]); // Vaciar las citas en caso de error
     }
   };
 
-  // Llamar a cargarCitas cada vez que cambia la fecha seleccionada
+  // Llamar a cargarCitas cuando cambia la fecha seleccionada
   useEffect(() => {
     cargarCitas(fechaSeleccionada, idUsuario);
   }, [fechaSeleccionada]);
 
+  // Función para manejar el cambio de fecha
   const manejarCambioDeFecha = (nuevaFecha) => {
     setFechaSeleccionada(
       nuevaFecha
@@ -59,58 +46,47 @@ const Agendamiento = () => {
   };
 
   const guardarCita = (detalleCita) => {
-    setCitas((prevCitas) => [...prevCitas, detalleCita]); // Agregar la cita recién creada al estado
+    setCitas((prevCitas) => [...prevCitas, detalleCita]); // Agregar la cita al estado
     setModalOpen(false); // Cerrar el modal
   };
 
-  // Función para abrir el modal en modo editar
   const manejarEditarCita = (cita) => {
-    setModalMode("editar"); // Cambiar el modo a "editar"
-    setCitaSeleccionada(cita); // Establecer la cita seleccionada
-    setModalOpen(true); // Abrir el modal
+    setModalMode("editar");
+    setCitaSeleccionada(cita);
+    setModalOpen(true);
   };
 
   const actualizarCita = () => {
     cargarCitas(fechaSeleccionada, idUsuario); // Recargar las citas
-    setModalMode("crear"); // Resetear el modo del modal
-    setCitaSeleccionada(null); // Limpiar la cita seleccionada
+    setModalMode("crear");
+    setCitaSeleccionada(null);
   };
 
-  // Función para eliminar una cita localmente
   const eliminarCitaLocalmente = (idCita) => {
     setCitas((prevCitas) => prevCitas.filter((cita) => cita.idCita !== idCita));
   };
 
   return (
     <Box sx={{ padding: 3 }}>
-      {/* Descripción Principal con estilo */}
       <Box
         sx={{
-          backgroundColor: "#558b2f", // Fondo verde oscuro
+          backgroundColor: "#558b2f",
           borderRadius: "10px",
           padding: "20px",
           marginBottom: "20px",
-          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.2)", // Sombra para destacar
-          textAlign: "center", // Centrar texto
+          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.2)",
+          textAlign: "center",
         }}
       >
         <Typography
           variant="h4"
-          sx={{
-            color: "white", // Texto blanco
-            fontWeight: "bold", // Negrita
-            letterSpacing: "1.5px", // Espaciado entre letras
-          }}
+          sx={{ color: "white", fontWeight: "bold", letterSpacing: "1.5px" }}
         >
           Agenda de Mantenimiento
         </Typography>
         <Typography
           variant="body1"
-          sx={{
-            color: "#dce775", // Texto amarillo suave
-            marginTop: "10px",
-            fontStyle: "italic", // Estilo cursiva
-          }}
+          sx={{ color: "#dce775", marginTop: "10px", fontStyle: "italic" }}
         >
           Organiza y visualiza todas tus citas con facilidad.
         </Typography>
@@ -118,21 +94,21 @@ const Agendamiento = () => {
       <Grid container spacing={2}>
         <Grid item xs={12} md={4}>
           <Calendario
-            value={dayjs(fechaSeleccionada)} // Pasar la fecha seleccionada al calendario
+            value={dayjs(fechaSeleccionada)}
             manejarCambioDeFecha={manejarCambioDeFecha}
           />
           <LeyendaEstados />
           <AccionesReservas
             onReservar={() => {
-              setModalMode("crear"); // Siempre establece el modo en "crear" al reservar
-              setModalOpen(true); // Abre el modal
+              setModalMode("crear");
+              setModalOpen(true);
             }}
           />
         </Grid>
         <Grid item xs={12} md={8}>
           {citas.length > 0 ? (
             <DetalleAgendamiento
-              citas={citas} // Pasar todo el array de citas
+              citas={citas}
               onModificar={manejarEditarCita}
               onEliminarCita={eliminarCitaLocalmente}
             />
@@ -144,7 +120,7 @@ const Agendamiento = () => {
                 justifyContent: "center",
                 flexDirection: "column",
                 textAlign: "center",
-                backgroundColor: "#f0f0f0", // Gris claro
+                backgroundColor: "#f0f0f0",
                 padding: "20px",
                 borderRadius: "8px",
                 minHeight: "200px",
@@ -153,25 +129,17 @@ const Agendamiento = () => {
               <EventNoteIcon
                 sx={{
                   fontSize: "50px",
-                  color: "#bdbdbd", // Gris oscuro
+                  color: "#bdbdbd",
                   marginBottom: "10px",
                 }}
               />
               <Typography
                 variant="h6"
-                sx={{
-                  color: "#757575", // Gris medio
-                  fontWeight: "bold",
-                }}
+                sx={{ color: "#757575", fontWeight: "bold" }}
               >
                 No hay citas para esta fecha
               </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#9e9e9e", // Gris claro
-                }}
-              >
+              <Typography variant="body2" sx={{ color: "#9e9e9e" }}>
                 Selecciona otra fecha o crea una nueva cita para comenzar.
               </Typography>
             </Box>
@@ -182,14 +150,14 @@ const Agendamiento = () => {
       <ModalReservar
         open={modalOpen}
         onClose={() => {
-          setModalOpen(false); // Cierra el modal
-          setModalMode("crear"); // Resetear el modo al cerrar
+          setModalOpen(false);
+          setModalMode("crear");
         }}
         onGuardar={guardarCita}
         onActualizar={actualizarCita}
         selectedDate={dayjs(fechaSeleccionada)}
-        mode={modalMode} // Pasamos el modo al modal
-        cita={citaSeleccionada} // Pasamos la cita seleccionada
+        mode={modalMode}
+        cita={citaSeleccionada}
       />
     </Box>
   );

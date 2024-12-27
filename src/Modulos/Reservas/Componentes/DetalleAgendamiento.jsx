@@ -7,10 +7,11 @@ import {
   IconButton,
   Box,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit"; // Ícono de Modificar
-import DeleteIcon from "@mui/icons-material/Delete"; // Ícono de Eliminar
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
+  // Obtener color según el estado
   const getColorByEstado = (estado) => {
     switch (estado) {
       case "pendiente":
@@ -24,60 +25,31 @@ const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
     }
   };
 
-  const eliminarCita = async (idCita) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta cita?")) {
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `https://localhost:7050/api/Citas/${idCita}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Error al eliminar la cita");
-      }
-
-      alert("Cita eliminada exitosamente");
-      onEliminarCita(idCita); // Recargar citas después de eliminar
-    } catch (error) {
-      console.error("Error al eliminar la cita:", error);
-      alert("Ocurrió un error al eliminar la cita.");
-    }
-  };
-
   return (
     <Box
       sx={{
         border: "1px solid #ddd",
         borderRadius: "8px",
         padding: "10px",
-        backgroundColor: "#f9fbe7", // Fondo amarillo claro
+        backgroundColor: "#f9fbe7",
         display: "flex",
         flexDirection: "column",
-        height: "100%", // Mantener la altura completa disponible
+        height: "100%",
       }}
     >
-      {/* Contenedor para el título */}
+      {/* Título */}
       <Box
         sx={{
-          backgroundColor: "#558b2f", // Fondo verde oscuro
+          backgroundColor: "#558b2f",
           borderRadius: "8px",
           padding: "15px",
           marginBottom: "15px",
-          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Sombra para destacar
+          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
         }}
       >
         <Typography
           variant="h6"
-          sx={{
-            color: "white", // Texto blanco para contraste
-            fontWeight: "bold",
-            textAlign: "center",
-          }}
+          sx={{ color: "white", fontWeight: "bold", textAlign: "center" }}
         >
           Detalles del Agendamiento
         </Typography>
@@ -86,9 +58,9 @@ const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
       {/* Contenedor con scroll */}
       <Box
         sx={{
-          overflowY: "auto", // Habilitar scroll vertical
-          maxHeight: "600px", // Altura máxima del componente
-          paddingRight: "5px", // Espacio para evitar que el scroll tape contenido
+          overflowY: "auto",
+          maxHeight: "600px",
+          paddingRight: "5px",
         }}
       >
         {citas.length === 0 ? (
@@ -101,49 +73,72 @@ const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
               <ListItem
                 key={index}
                 sx={{
-                  backgroundColor: getColorByEstado(cita.estado), // Color según el estado
+                  backgroundColor: getColorByEstado(cita.estado),
                   borderRadius: "5px",
                   marginBottom: "8px",
                   boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  padding: "10px",
                 }}
               >
                 {/* Información de la cita */}
-                <ListItemText
-                  primary={
+                <Typography
+                  variant="subtitle1"
+                  sx={{ color: "white", fontWeight: "bold" }}
+                >
+                  Hora: {cita.hora || "Sin hora"} - Modelo:{" "}
+                  {cita.marca || "N/A"} {cita.modelo || ""}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "white" }}>
+                  Año: {cita.anho || "N/A"} - Chapa: {cita.placa || "Sin placa"}
+                </Typography>
+
+                {/* Servicios Solicitados */}
+                <Typography
+                  variant="body2"
+                  sx={{ color: "white", fontWeight: "bold", marginTop: "8px" }}
+                >
+                  Servicios Solicitados:
+                </Typography>
+                <List sx={{ paddingLeft: "20px", color: "#fff" }}>
+                  {cita.detallesCita && cita.detallesCita.length > 0 ? (
+                    cita.detallesCita.map((detalle, idx) => (
+                      <ListItem key={idx} disableGutters>
+                        <ListItemText
+                          primary={
+                            <Typography variant="body2" sx={{ color: "white" }}>
+                              {detalle.tipoServicio || "Sin servicio"} -{" "}
+                              {detalle.precioServicio
+                                ? `${detalle.precioServicio.toLocaleString(
+                                    "es-PY"
+                                  )} Gs.`
+                                : "Sin precio"}
+                            </Typography>
+                          }
+                          secondary={
+                            <Typography
+                              variant="body2"
+                              sx={{ color: "#cfd8dc" }}
+                            >
+                              {detalle.descripcion || "Sin descripción"}
+                            </Typography>
+                          }
+                        />
+                      </ListItem>
+                    ))
+                  ) : (
                     <Typography
-                      variant="subtitle1"
-                      sx={{ color: "white", fontWeight: "bold" }} // Texto blanco para mejor contraste
+                      variant="body2"
+                      sx={{ color: "#cfd8dc", marginLeft: "16px" }}
                     >
-                      Hora: {cita.hora} - Modelo: {cita.marca} {cita.modelo}
+                      No se han agregado servicios a esta cita.
                     </Typography>
-                  }
-                  secondary={
-                    <>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "white", fontWeight: "bold" }}
-                      >
-                        Año: {cita.anho}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: "white" }}>
-                        Chapa: {cita.placa}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: "white" }}>
-                        Tipo de Servicio: {cita.tipoServicio} {/* AGREGADO */}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: "white" }}>
-                        Descripción: {cita.descripcion}
-                      </Typography>
-                    </>
-                  }
-                />
+                  )}
+                </List>
 
                 {/* Botones de acción */}
-                <Box>
-                  {/* Botón de Modificar */}
+                <Box sx={{ alignSelf: "flex-end", marginTop: "8px" }}>
                   <IconButton
                     aria-label="modificar"
                     onClick={() => onModificar(cita)}
@@ -151,11 +146,9 @@ const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
                   >
                     <EditIcon />
                   </IconButton>
-
-                  {/* Botón de Eliminar */}
                   <IconButton
                     aria-label="eliminar"
-                    onClick={() => eliminarCita(cita.idCita)}
+                    onClick={() => onEliminarCita(cita.idCita)}
                     sx={{ color: "white" }}
                   >
                     <DeleteIcon />

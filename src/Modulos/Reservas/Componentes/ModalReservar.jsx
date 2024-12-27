@@ -14,31 +14,38 @@ import {
   Typography,
   Paper,
   Divider,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
+import "dayjs/locale/es";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-const ModalReservar = ({
-  open,
-  onClose,
-  onGuardar,
-  onActualizar, // AGREGADO: Callback para actualizar una cita
-  selectedDate,
-  mode = "crear", // AGREGADO: Define si el modal está en modo "crear" o "editar"
-  cita = null, // AGREGADO: Datos de la cita seleccionada para editar
-}) => {
-  const [fecha, setFecha] = useState(selectedDate || null);
+// Importar servicios
+import {
+  obtenerTiposServicios,
+  obtenerMarcas,
+  obtenerModelosPorMarca,
+  obtenerAnhos,
+  crearVehiculo,
+  crearCitaConDetalles,
+} from "../Services/citasService";
+
+const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
+  dayjs.locale("es");
+
+  // Estados principales
+  const [fecha, setFecha] = useState(selectedDate || dayjs());
   const [hora, setHora] = useState(null);
-  const [servicio, setServicio] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [tiposServicio, setTiposServicio] = useState([]);
-  const [errorServicios, setErrorServicios] = useState(false);
 
-  // Estados para marca, modelo y año
+  // Estados para vehículo
   const [marcas, setMarcas] = useState([]);
   const [modelos, setModelos] = useState([]);
   const [anhos, setAnhos] = useState([]);
@@ -46,235 +53,161 @@ const ModalReservar = ({
   const [modeloSeleccionado, setModeloSeleccionado] = useState("");
   const [anhoSeleccionado, setAnhoSeleccionado] = useState("");
 
-  // Prellenar datos si estamos en modo "editar" y se selecciona una cita
+  // Estados para servicios
+  const [tiposServicio, setTiposServicio] = useState([]);
+  const [servicioSeleccionado, setServicioSeleccionado] = useState("");
+  const [descripcionServicio, setDescripcionServicio] = useState("");
+  const [serviciosSeleccionados, setServiciosSeleccionados] = useState([]);
+
+  // Cargar datos iniciales al abrir el modal
   useEffect(() => {
-    if (mode === "editar" && cita) {
-      // MODIFICADO
-      setFecha(dayjs(cita.fecha));
-      setHora(dayjs(cita.hora, "HH:mm"));
-      setServicio(cita.tipoServicio);
-      setDescripcion(cita.descripcion);
-      setMarcaSeleccionada(cita.marca);
-      setModeloSeleccionado(cita.modelo);
-      setAnhoSeleccionado(cita.anho);
-    }
-  }, [mode, cita]); // MODIFICADO
+    const cargarDatosIniciales = async () => {
+      try {
+        const [servicios, marcas, anhos] = await Promise.all([
+          obtenerTiposServicios(),
+          obtenerMarcas(),
+          obtenerAnhos(),
+        ]);
 
-  // Cargar tipos de servicio
+        setTiposServicio(servicios || []);
+        setMarcas(marcas || []);
+        setAnhos(anhos || []);
+      } catch (error) {
+        console.error("Error al cargar datos iniciales:", error);
+      }
+    };
+
+    if (open) {
+      cargarDatosIniciales();
+    }
+  }, [open]);
+
+  // Cargar modelos dinámicamente al seleccionar una marca
   useEffect(() => {
-    if (open && mode === "crear") {
-      setFecha(selectedDate || dayjs());
+    const cargarModelos = async () => {
+      if (marcaSeleccionada) {
+        try {
+          const modelos = await obtenerModelosPorMarca(marcaSeleccionada);
+          setModelos(modelos || []);
+        } catch (error) {
+          console.error("Error al cargar modelos:", error);
+        }
+      }
+    };
 
-      fetch("https://localhost:7050/api/TipoServicios/tiposservicios")
-        .then((response) => {
-          if (!response.ok)
-            throw new Error("Error al cargar los tipos de servicio");
-          return response.json();
-        })
-        .then((data) => {
-          setTiposServicio(data);
-          setErrorServicios(false);
-        })
-        .catch((error) => {
-          setErrorServicios(true);
-        });
-
-      // Cargar marcas
-      fetch("https://localhost:7050/api/Vehiculos/marcas")
-        .then((response) => {
-          if (!response.ok) throw new Error("Error al cargar las marcas");
-          return response.json();
-        })
-        .then((data) => setMarcas(data))
-        .catch((error) => console.error("Error al cargar marcas:", error));
-
-      // Cargar años
-      fetch("https://localhost:7050/api/Vehiculos/anhos")
-        .then((response) => {
-          if (!response.ok) throw new Error("Error al cargar los años");
-          return response.json();
-        })
-        .then((data) => setAnhos(data))
-        .catch((error) => console.error("Error al cargar años:", error));
-    }
-  }, [open, selectedDate, mode]);
-
-  // Cargar modelos dinámicamente cuando cambia la marca seleccionada
-  useEffect(() => {
-    // Verificar si marcaSeleccionada es un número válido antes de llamar a la API
-    const isIdValido =
-      !isNaN(marcaSeleccionada) && Number(marcaSeleccionada) > 0;
-
-    if (isIdValido) {
-      fetch(`https://localhost:7050/api/Vehiculos/modelos/${marcaSeleccionada}`)
-        .then((response) => {
-          if (!response.ok) throw new Error("Error al cargar los modelos");
-          return response.json();
-        })
-        .then((data) => setModelos(data))
-        .catch((error) => console.error("Error al cargar modelos:", error));
-    } else {
-      // Si no es un ID válido, limpiar los modelos
-      setModelos([]);
-    }
+    cargarModelos();
   }, [marcaSeleccionada]);
 
-  // Guardamos la Cita ingresada por el usuario
+  // Agregar un servicio al listado
+  const agregarServicio = () => {
+    if (!servicioSeleccionado) {
+      alert("Debe seleccionar un tipo de servicio.");
+      return;
+    }
+
+    const servicio = tiposServicio.find(
+      (tipo) => tipo.idTipoServicio === servicioSeleccionado
+    );
+
+    if (!servicio) {
+      alert("El servicio seleccionado no es válido.");
+      return;
+    }
+
+    // Validar que no se dupliquen servicios
+    const existeServicio = serviciosSeleccionados.some(
+      (item) => item.idTipoServicio === servicio.idTipoServicio
+    );
+    if (existeServicio) {
+      alert("Este servicio ya ha sido agregado.");
+      return;
+    }
+
+    setServiciosSeleccionados((prev) => [
+      ...prev,
+      {
+        idTipoServicio: servicio.idTipoServicio,
+        nombre: servicio.nombre,
+        precio: servicio.costo || 0, // Mostrar costo del servicio
+        descripcion: descripcionServicio || "",
+      },
+    ]);
+
+    setServicioSeleccionado("");
+    setDescripcionServicio("");
+  };
+
+  // Eliminar un servicio del listado
+  const eliminarServicio = (index) => {
+    setServiciosSeleccionados((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Guardar la cita con detalles
+  // Guardar la cita con detalles
   const guardarCita = async () => {
-    // Validar si los campos obligatorios están llenos
     if (
       !marcaSeleccionada ||
       !modeloSeleccionado ||
       !anhoSeleccionado ||
       !fecha ||
-      !hora ||
-      !servicio
+      !hora
     ) {
-      alert("Por favor, complete todos los campos.");
+      alert("Debe completar todos los campos del vehículo y la cita.");
       return;
     }
 
-    // Crear el objeto del vehículo
-    const nuevoVehiculo = {
-      idMarca: marcaSeleccionada,
-      idModelo: modeloSeleccionado,
-      idAnho: anhoSeleccionado,
-      placa: "SIN-PLACA",
-    };
+    if (serviciosSeleccionados.length === 0) {
+      alert("Debe agregar al menos un servicio.");
+      return;
+    }
 
     try {
-      // Paso 1: Insertar el vehículo
-      const vehiculoResponse = await fetch(
-        "https://localhost:7050/api/Vehiculos/crear",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(nuevoVehiculo),
-        }
-      );
+      // Crear el vehículo
+      const vehiculo = {
+        idMarca: marcaSeleccionada,
+        idModelo: modeloSeleccionado,
+        idAnho: anhoSeleccionado,
+        placa: "SIN-PLACA",
+      };
+      const vehiculoCreado = await crearVehiculo(vehiculo);
 
-      const vehiculoData = await vehiculoResponse.json();
-      if (!vehiculoResponse.ok) {
-        throw new Error(vehiculoData.mensaje || "Error al guardar el vehículo");
-      }
-
-      const idVehiculo = vehiculoData.idVehiculo;
-
-      // Crear el objeto de la cita
-      const nuevaCita = {
-        IdVehiculo: idVehiculo,
-        Fecha: fecha ? fecha.format("YYYY-MM-DD") : "",
-        Hora: hora ? hora.format("HH:mm") : "",
-        IdTipoServicio: tiposServicio.find((tipo) => tipo.nombre === servicio)
-          ?.idTipoServicio,
-        Descripcion: descripcion,
-        Estado: "pendiente",
-        IdUsuario: 2,
+      // Crear la cita con detalles
+      const citaConDetalles = {
+        cita: {
+          IdVehiculo: vehiculoCreado.idVehiculo,
+          Fecha: fecha.format("YYYY-MM-DD"),
+          Hora: hora.format("HH:mm"),
+          Estado: "pendiente",
+          IdUsuario: 2,
+        },
+        detallesCita: serviciosSeleccionados.map((servicio) => ({
+          IdTipoServicio: servicio.idTipoServicio,
+          Descripcion: servicio.descripcion,
+          PrecioServicio: servicio.precio,
+        })),
       };
 
-      console.log(nuevaCita);
-
-      // Paso 2: Insertar la cita
-      const citaResponse = await fetch(
-        "https://localhost:7050/api/Citas/crear",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(nuevaCita),
-        }
-      );
-
-      const citaData = await citaResponse.json();
-
-      if (!citaResponse.ok) {
-        throw new Error(citaData.mensaje || "Error al guardar la cita");
-      }
-
-      // Paso 3: Obtener los detalles de la cita recién creada
-      const detalleResponse = await fetch(
-        `https://localhost:7050/api/Citas/${citaData.idCita}`
-      );
-      const detalleCita = await detalleResponse.json();
-
-      if (!detalleResponse.ok) {
-        const errorData = await citaResponse.json();
-        throw new Error(errorData.mensaje || "Error al guardar la cita");
-      }
-
-      onGuardar(detalleCita);
-      handleClose();
+      const respuesta = await crearCitaConDetalles(citaConDetalles);
+      alert(respuesta?.mensaje || "Cita creada exitosamente.");
+      onGuardar();
       onClose();
     } catch (error) {
-      alert("Ocurrió un error al guardar los datos. Intente nuevamente.");
+      console.error("Error al guardar la cita:", error);
+      alert("Ocurrió un error al guardar la cita.");
     }
-  };
-
-  // Actualizar una cita existente
-  const actualizarCita = async () => {
-    if (!cita || !cita.idCita) {
-      console.error("No hay cita válida para actualizar.");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `https://localhost:7050/api/Citas/${cita.idCita}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            hora: hora ? hora.format("HH:mm") : null,
-            descripcion: descripcion || "",
-          }),
-        }
-      );
-
-      const citaActualizada = await response.json();
-      if (!response.ok) {
-        throw new Error("Error al actualizar la cita");
-      }
-
-      alert("Cita actualizada exitosamente");
-
-      if (onActualizar) {
-        onActualizar(); // Notifica al padre sobre la actualización
-      }
-
-      resetFields();
-      onClose(); // Cierra el modal
-    } catch (error) {
-      alert("Ocurrió un error al actualizar la cita. Intente nuevamente.");
-    }
-  };
-
-  // Formato de fecha estilizado
-  const formatoDia = fecha ? fecha.format("DD") : "--";
-  const formatoMesAnio = fecha ? fecha.format("MMMM YYYY") : "Mes Año";
-
-  // Función para limpiar los campos
-  const resetFields = () => {
-    setFecha(selectedDate || null);
-    setHora(null);
-    setServicio("");
-    setDescripcion("");
-    setMarcaSeleccionada("");
-    setModeloSeleccionado("");
-    setAnhoSeleccionado("");
-    setModelos([]);
-  };
-
-  // Función para manejar el cierre del modal
-  const handleClose = () => {
-    resetFields(); // Limpiar los campos
-    onClose(); // Cerrar el modal
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      {/* Header */}
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md" // Aumentar ancho del modal
+      fullWidth
+    >
+      {/* Header del Modal */}
       <Box
         sx={{
-          backgroundColor: mode === "editar" ? "#0288d1" : "#43a047",
+          backgroundColor: "#43a047",
           color: "#fff",
           padding: 2,
           display: "flex",
@@ -283,7 +216,7 @@ const ModalReservar = ({
         }}
       >
         <DialogTitle sx={{ flex: 1, padding: 0, fontWeight: "bold" }}>
-          {mode === "editar" ? "Actualizar Cita" : "Reservar Nueva Cita"}
+          Reservar Nueva Cita
         </DialogTitle>
         <Box sx={{ textAlign: "right" }}>
           <Typography
@@ -291,178 +224,224 @@ const ModalReservar = ({
             component="div"
             sx={{ fontWeight: "bold", lineHeight: 1 }}
           >
-            {fecha?.format("DD") || "--"}
+            {fecha.format("DD")}
           </Typography>
           <Typography
             variant="body1"
             component="span"
             sx={{ fontWeight: "bold" }}
           >
-            {fecha?.format("MMMM YYYY") || "Mes Año"}
+            {fecha.format("MMMM YYYY")}
           </Typography>
         </Box>
       </Box>
 
+      {/* Contenido del Modal */}
       <DialogContent>
-        <Divider sx={{ marginBottom: 2 }} />
+        <Divider sx={{ mb: 2 }} />
 
-        {/* Tipo de Servicio */}
-        {mode === "editar" ? (
-          <TextField
-            label="Tipo de Servicio"
-            value={servicio || "No disponible"}
-            InputProps={{ readOnly: true }}
-            fullWidth
-            sx={{ marginBottom: 2 }}
-          />
-        ) : (
-          <FormControl fullWidth sx={{ marginBottom: 2 }}>
+        {/* Selección de Servicios */}
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>
+            Servicios Solicitados
+          </Typography>
+
+          {/* Selección de Tipo de Servicio */}
+          <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Tipo de Servicio</InputLabel>
             <Select
-              value={servicio}
-              onChange={(e) => setServicio(e.target.value)}
+              value={servicioSeleccionado}
+              onChange={(e) => setServicioSeleccionado(e.target.value)}
               label="Tipo de Servicio"
-              disabled={errorServicios || tiposServicio.length === 0}
             >
               {tiposServicio.map((tipo) => (
-                <MenuItem key={tipo.idTipoServicio} value={tipo.nombre}>
-                  {tipo.nombre}
+                <MenuItem key={tipo.idTipoServicio} value={tipo.idTipoServicio}>
+                  {`${tipo.nombre} - ${tipo.costo?.toLocaleString(
+                    "es-PY"
+                  )} Gs.`}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
-        )}
 
-        {/* Información del vehículo */}
-        <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
-          <Typography
-            variant="subtitle1"
-            sx={{ fontWeight: "bold", marginBottom: 1 }}
-          >
-            Vehículo
+          {/* Campo para agregar descripción del servicio */}
+          <TextField
+            label="Descripción del Servicio"
+            value={descripcionServicio}
+            onChange={(e) => setDescripcionServicio(e.target.value)}
+            fullWidth
+            multiline
+            rows={2}
+            sx={{ mb: 2 }}
+          />
+
+          {/* Botón para agregar servicio */}
+          <Button variant="outlined" color="primary" onClick={agregarServicio}>
+            Agregar Servicio
+          </Button>
+
+          {/* Listado de Servicios Solicitados */}
+          <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>
+            Servicios Solicitados
           </Typography>
-
-          {/* Marca */}
-          {mode === "editar" ? (
-            <TextField
-              label="Marca"
-              value={marcaSeleccionada}
-              InputProps={{ readOnly: true }}
-              fullWidth
-              sx={{ marginBottom: 2 }}
-            />
-          ) : (
-            <FormControl fullWidth sx={{ marginBottom: 2 }}>
-              <InputLabel>Marca</InputLabel>
-              <Select
-                value={marcaSeleccionada}
-                onChange={(e) => setMarcaSeleccionada(e.target.value)}
-                label="Marca"
+          <List
+            dense
+            sx={{
+              maxHeight: 150,
+              overflowY: "auto",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              padding: 1,
+            }}
+          >
+            {serviciosSeleccionados.length === 0 ? (
+              <Typography
+                variant="body2"
+                sx={{ textAlign: "center", padding: 1, color: "#999" }}
               >
-                {marcas.map((marca) => (
-                  <MenuItem key={marca.idMarca} value={marca.idMarca}>
-                    {marca.nombre}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
+                No se han agregado servicios.
+              </Typography>
+            ) : (
+              serviciosSeleccionados.map((servicio, index) => (
+                <ListItem
+                  key={index}
+                  secondaryAction={
+                    <IconButton
+                      edge="end"
+                      color="error"
+                      onClick={() => eliminarServicio(index)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  }
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "2fr 1fr auto",
+                    gridTemplateRows: "auto auto",
+                    alignItems: "center",
+                    gap: "4px 16px",
+                    padding: "8px 16px",
+                    borderBottom: "1px solid #e0e0e0",
+                  }}
+                >
+                  {/* Nombre del servicio */}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: "bold",
+                      gridColumn: "1 / span 3",
+                      fontSize: "14px", // Tamaño reducido
+                    }}
+                  >
+                    {servicio.nombre}
+                  </Typography>
 
-          {/* Modelo */}
-          {mode === "editar" ? (
-            <TextField
-              label="Modelo"
-              value={modeloSeleccionado}
-              InputProps={{ readOnly: true }}
-              fullWidth
-              sx={{ marginBottom: 2 }}
-            />
-          ) : (
-            <FormControl
-              fullWidth
-              sx={{ marginBottom: 2 }}
-              disabled={!marcaSeleccionada}
-            >
-              <InputLabel>Modelo</InputLabel>
-              <Select
-                value={modeloSeleccionado}
-                onChange={(e) => setModeloSeleccionado(e.target.value)}
-                label="Modelo"
-              >
-                {modelos.map((modelo) => (
-                  <MenuItem key={modelo.idModelo} value={modelo.idModelo}>
-                    {modelo.nombre}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
+                  {/* Precio del servicio */}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: "12px", // Tamaño reducido
+                      color: "#555",
+                    }}
+                  >
+                    {`${servicio.precio.toLocaleString("es-PY")} Gs.`}
+                  </Typography>
 
-          {/* Año */}
-          {mode === "editar" ? (
-            <TextField
-              label="Año"
-              value={anhoSeleccionado}
-              InputProps={{ readOnly: true }}
-              fullWidth
-            />
-          ) : (
-            <FormControl fullWidth>
-              <InputLabel>Año</InputLabel>
-              <Select
-                value={anhoSeleccionado}
-                onChange={(e) => setAnhoSeleccionado(e.target.value)}
-                label="Año"
-              >
-                {anhos.map((anho) => (
-                  <MenuItem key={anho.idAnho} value={anho.idAnho}>
-                    {anho.anho}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
+                  {/* Descripción del servicio */}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: "12px", // Tamaño reducido
+                      color: "#777",
+                      gridColumn: "1 / span 2", // Ocupar espacio horizontal completo
+                      wordWrap: "break-word", // Permitir salto de línea para descripciones largas
+                    }}
+                  >
+                    {servicio.descripcion || "Sin descripción"}
+                  </Typography>
+                </ListItem>
+              ))
+            )}
+          </List>
         </Paper>
 
-        {/* Hora y descripción */}
+        {/* Información del Vehículo */}
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>
+            Vehículo
+          </Typography>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Marca</InputLabel>
+            <Select
+              value={marcaSeleccionada}
+              onChange={(e) => setMarcaSeleccionada(e.target.value)}
+              label="Marca"
+            >
+              {marcas.map((marca) => (
+                <MenuItem key={marca.idMarca} value={marca.idMarca}>
+                  {marca.nombre}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Modelo</InputLabel>
+            <Select
+              value={modeloSeleccionado}
+              onChange={(e) => setModeloSeleccionado(e.target.value)}
+              label="Modelo"
+            >
+              {modelos.map((modelo) => (
+                <MenuItem key={modelo.idModelo} value={modelo.idModelo}>
+                  {modelo.nombre}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth>
+            <InputLabel>Año</InputLabel>
+            <Select
+              value={anhoSeleccionado}
+              onChange={(e) => setAnhoSeleccionado(e.target.value)}
+              label="Año"
+            >
+              {anhos.map((anho) => (
+                <MenuItem key={anho.idAnho} value={anho.idAnho}>
+                  {anho.anho}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Paper>
+
+        {/* Hora */}
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <TimePicker
             label="Hora"
             value={hora}
             onChange={(newValue) => setHora(newValue)}
-            sx={{ marginTop: 2, width: "100%" }}
+            fullWidth
+            sx={{ mb: 2 }}
           />
         </LocalizationProvider>
-        <TextField
-          label="Descripción"
-          multiline
-          rows={3}
-          fullWidth
-          sx={{ marginTop: 2 }}
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-        />
       </DialogContent>
 
-      {/* Acciones */}
+      {/* Botones de Acción */}
       <DialogActions>
-        <Button
-          onClick={handleClose}
-          color="secondary"
-          startIcon={<CancelIcon />}
-        >
+        <Button onClick={onClose} color="secondary" startIcon={<CancelIcon />}>
           Cancelar
         </Button>
         <Button
-          onClick={mode === "editar" ? actualizarCita : guardarCita}
+          onClick={guardarCita}
           color="primary"
           variant="contained"
           startIcon={<SaveIcon />}
         >
-          {mode === "editar" ? "Actualizar" : "Guardar"}
+          Guardar
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
+
 export default ModalReservar;
