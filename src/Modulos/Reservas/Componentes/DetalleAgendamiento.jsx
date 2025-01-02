@@ -7,10 +7,9 @@ import {
   IconButton,
   Box,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
+const DetalleAgendamiento = ({ citas, onEliminarCita }) => {
   // Obtener color según el estado
   const getColorByEstado = (estado) => {
     switch (estado) {
@@ -24,6 +23,13 @@ const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
         return "#ddd"; // Gris claro
     }
   };
+
+  // Calcular el monto total de los servicios en una cita
+  const calcularMontoTotal = (detallesCita) =>
+    detallesCita.reduce(
+      (total, detalle) => total + (detalle.precioServicio || 0),
+      0
+    );
 
   return (
     <Box
@@ -80,8 +86,24 @@ const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
                   flexDirection: "column",
                   alignItems: "flex-start",
                   padding: "10px",
+                  position: "relative", // Para posicionar el botón de eliminar
                 }}
               >
+                {/* Botón de eliminar */}
+                <IconButton
+                  aria-label="eliminar"
+                  onClick={() => onEliminarCita(cita.idCita)}
+                  sx={{
+                    position: "absolute",
+                    top: "5px",
+                    right: "5px",
+                    color: "#e57373", // Rojo más claro
+                    "&:hover": { color: "#ef9a9a" }, // Cambio de color al pasar el cursor
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+
                 {/* Información de la cita */}
                 <Typography
                   variant="subtitle1"
@@ -137,23 +159,23 @@ const DetalleAgendamiento = ({ citas, onModificar, onEliminarCita }) => {
                   )}
                 </List>
 
-                {/* Botones de acción */}
-                <Box sx={{ alignSelf: "flex-end", marginTop: "8px" }}>
-                  <IconButton
-                    aria-label="modificar"
-                    onClick={() => onModificar(cita)}
-                    sx={{ color: "white", marginRight: 1 }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    aria-label="eliminar"
-                    onClick={() => onEliminarCita(cita.idCita)}
-                    sx={{ color: "white" }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
+                {/* Monto total de servicios */}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "white",
+                    fontWeight: "bold",
+                    marginTop: "8px",
+                    textAlign: "right",
+                  }}
+                >
+                  Total:{" "}
+                  {cita.detallesCita
+                    ? `${calcularMontoTotal(cita.detallesCita).toLocaleString(
+                        "es-PY"
+                      )} Gs.`
+                    : "0 Gs."}
+                </Typography>
               </ListItem>
             ))}
           </List>

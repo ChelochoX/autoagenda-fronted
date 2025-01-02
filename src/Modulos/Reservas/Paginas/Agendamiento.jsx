@@ -7,7 +7,10 @@ import AccionesReservas from "../Componentes/AccionesReservas";
 import ModalReservar from "../Componentes/ModalReservar";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import dayjs from "dayjs";
-import { obtenerCitasPorFechaYUsuario } from "../Services/citasService"; // Importar el servicio
+import {
+  obtenerCitasPorFechaYUsuario,
+  eliminarCita,
+} from "../Services/citasService"; // Importar el servicio
 
 const Agendamiento = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -45,9 +48,15 @@ const Agendamiento = () => {
     );
   };
 
-  const guardarCita = (detalleCita) => {
-    setCitas((prevCitas) => [...prevCitas, detalleCita]); // Agregar la cita al estado
-    setModalOpen(false); // Cerrar el modal
+  const guardarCita = async () => {
+    try {
+      await cargarCitas(fechaSeleccionada, idUsuario); // Recargar citas desde el backend
+      setModalOpen(false); // Cerrar el modal
+      setModalMode("crear"); // Resetear el modo del modal
+      setCitaSeleccionada(null); // Limpiar la cita seleccionada
+    } catch (error) {
+      alert("Ocurrió un error al cargar las citas después de guardar.");
+    }
   };
 
   const manejarEditarCita = (cita) => {
@@ -64,6 +73,23 @@ const Agendamiento = () => {
 
   const eliminarCitaLocalmente = (idCita) => {
     setCitas((prevCitas) => prevCitas.filter((cita) => cita.idCita !== idCita));
+  };
+
+  const onEliminarCita = async (idCita) => {
+    try {
+      // Llamada al backend para eliminar la cita
+      await eliminarCita(idCita);
+
+      // Eliminar localmente después de la confirmación del backend
+      setCitas((prevCitas) =>
+        prevCitas.filter((cita) => cita.idCita !== idCita)
+      );
+
+      alert("Cita eliminada exitosamente.");
+    } catch (error) {
+      console.error("Error al eliminar la cita:", error);
+      alert("Ocurrió un error al eliminar la cita.");
+    }
   };
 
   return (
@@ -110,7 +136,7 @@ const Agendamiento = () => {
             <DetalleAgendamiento
               citas={citas}
               onModificar={manejarEditarCita}
-              onEliminarCita={eliminarCitaLocalmente}
+              onEliminarCita={onEliminarCita}
             />
           ) : (
             <Box

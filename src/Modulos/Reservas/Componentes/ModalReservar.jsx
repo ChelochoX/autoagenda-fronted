@@ -59,6 +59,24 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
   const [descripcionServicio, setDescripcionServicio] = useState("");
   const [serviciosSeleccionados, setServiciosSeleccionados] = useState([]);
 
+  // Restablecer los campos al cerrar el modal
+  const resetModalFields = () => {
+    setFecha(selectedDate || dayjs());
+    setHora(null);
+    setMarcaSeleccionada("");
+    setModeloSeleccionado("");
+    setAnhoSeleccionado("");
+    setServicioSeleccionado("");
+    setDescripcionServicio("");
+    setServiciosSeleccionados([]);
+  };
+
+  useEffect(() => {
+    if (!open) {
+      resetModalFields(); // Restablecer los campos si el modal se cierra
+    }
+  }, [open]);
+
   // Cargar datos iniciales al abrir el modal
   useEffect(() => {
     const cargarDatosIniciales = async () => {
@@ -200,7 +218,10 @@ const ModalReservar = ({ open, onClose, onGuardar, selectedDate }) => {
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={() => {
+        resetModalFields();
+        onClose();
+      }}
       maxWidth="md" // Aumentar ancho del modal
       fullWidth
     >
