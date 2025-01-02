@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -20,6 +20,11 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { useNavigate } from "react-router-dom";
+import {
+  actualizarCita,
+  actualizarEstadoCita,
+  obtenerUsuarioPorId,
+} from "../Services/fichasService";
 import "../Estilos/ReservaCard.css";
 
 export default function ReservaCard({ cita, onActualizacion }) {
@@ -34,33 +39,22 @@ export default function ReservaCard({ cita, onActualizacion }) {
     cita.descripcion
   );
 
-  const [originalHora, setOriginalHora] = useState(
-    new Date(`1970-01-01T${cita.hora}`)
-  );
-  const [originalDescripcion, setOriginalDescripcion] = useState(
-    cita.descripcion
-  );
-
   const [alert, setAlert] = useState({ type: "", message: "", visible: false });
   const [estadoCita, setEstadoCita] = useState(cita.estado);
   const [isLoading, setIsLoading] = useState(false);
-  const [isApproved, setIsApproved] = useState(false);
 
   const navigate = useNavigate();
 
   const botonesDeshabilitados = estadoCita !== "pendiente";
 
   const handleEdit = () => {
-    setOriginalHora(updatedHora);
-    setOriginalDescripcion(updatedDescripcion);
     setIsEditing(true);
   };
 
   const handleCancelEdit = () => {
-    setUpdatedHora(originalHora);
-    setUpdatedDescripcion(originalDescripcion);
+    setUpdatedHora(new Date(`1970-01-01T${cita.hora}`));
+    setUpdatedDescripcion(cita.descripcion);
     setIsEditing(false);
-
     setAlert({
       type: "info",
       message: "Cambios descartados.",
@@ -76,26 +70,12 @@ export default function ReservaCard({ cita, onActualizacion }) {
         hour12: false,
       });
 
-      const body = {
+      const data = {
         hora: formattedHora,
         descripcion: updatedDescripcion,
       };
 
-      const response = await fetch(
-        `https://localhost:7050/api/Citas/${cita.idCita}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(body),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
+      await actualizarCita(cita.idCita, data);
       setIsEditing(false);
 
       setAlert({
@@ -103,9 +83,9 @@ export default function ReservaCard({ cita, onActualizacion }) {
         message: "¡Cita actualizada correctamente!",
         visible: true,
       });
-    } catch (error) {
-      console.error("Error al actualizar la cita:", error);
 
+      if (onActualizacion) onActualizacion();
+    } catch (error) {
       setAlert({
         type: "error",
         message: "Hubo un error al guardar los cambios.",
@@ -114,68 +94,18 @@ export default function ReservaCard({ cita, onActualizacion }) {
     }
   };
 
-  const handleAprobarCita = async () => {
-    if (isLoading || isApproved) return;
-
-    try {
-      setIsLoading(true);
-
-      const estadoResponse = await fetch(
-        `https://localhost:7050/api/Citas/${cita.idCita}/estado`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify("aprobado"),
-        }
-      );
-
-      if (!estadoResponse.ok) {
-        throw new Error(
-          `Error al actualizar el estado de la cita: ${estadoResponse.status}`
-        );
-      }
-
-      navigate(`/gestionfichas`, { state: { idCita: cita.idCita } });
-    } catch (error) {
-      setAlert({
-        type: "error",
-        message: "Hubo un error al aprobar la cita. Inténtalo de nuevo.",
-        visible: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleActualizarEstado = async (nuevoEstado) => {
     try {
-      const response = await fetch(
-        `https://localhost:7050/api/Citas/${cita.idCita}/estado`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(nuevoEstado),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          `Error al actualizar el estado de la cita: ${response.status}`
-        );
-      }
-
+      await actualizarEstadoCita(cita.idCita, nuevoEstado); // Pasar el estado como string
       setEstadoCita(nuevoEstado);
-
       setAlert({
         type: "success",
         message: `Estado cambiado a ${nuevoEstado}.`,
         visible: true,
       });
-    } catch (error) {
-      console.error("Error al actualizar el estado:", error);
 
+      if (onActualizacion) onActualizacion();
+    } catch (error) {
       setAlert({
         type: "error",
         message: "Hubo un error al actualizar el estado.",
@@ -188,14 +118,8 @@ export default function ReservaCard({ cita, onActualizacion }) {
     setModalVisible(true);
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://localhost:7050/api/Usuarios/${cita.idUsuario}`
-      );
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-      const data = await response.json();
-      setDetalleUsuario(data);
+      const usuario = await obtenerUsuarioPorId(cita.idUsuario);
+      setDetalleUsuario(usuario);
     } catch (error) {
       setDetalleUsuario(null);
     } finally {
@@ -219,15 +143,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
       default:
         return { backgroundColor: "#f0f0f0", color: "#000" };
     }
-  };
-
-  const handleIrFicha = () => {
-    if (!cita.idCita) {
-      console.error("No se encontró un ID de cita válido.");
-      return;
-    }
-
-    navigate(`/gestionfichas`, { state: { idCita: cita.idCita } });
   };
 
   return (
@@ -427,7 +342,9 @@ export default function ReservaCard({ cita, onActualizacion }) {
 
           {estadoCita === "aprobado" && (
             <IconButton
-              onClick={handleIrFicha}
+              onClick={() =>
+                navigate(`/gestionfichas`, { state: { idCita: cita.idCita } })
+              }
               style={{
                 color: "#4caf50",
               }}
@@ -475,7 +392,7 @@ export default function ReservaCard({ cita, onActualizacion }) {
                   : "transparent",
               }}
               disabled={botonesDeshabilitados || isLoading}
-              onClick={handleAprobarCita}
+              onClick={() => handleActualizarEstado("aprobado")}
             >
               {isLoading ? "Procesando..." : "Aprobar"}
             </Button>

@@ -3,8 +3,8 @@ import { Grid, Typography, Paper, Box } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { format } from "date-fns";
 import { es } from "date-fns/locale"; // Importamos la localización en español
+import { cargarCitas } from "../Services/fichasService"; // Importamos el nuevo método
 import ReservaCard from "../Componentes/ReservaCard";
 
 export default function GestionReservas() {
@@ -12,25 +12,13 @@ export default function GestionReservas() {
   const [fecha, setFecha] = useState(new Date());
   const idUsuario = 2;
 
-  const cargarCitas = async (fechaSeleccionada) => {
-    const fechaFormateada = format(fechaSeleccionada, "yyyy-MM-dd");
-    try {
-      const response = await fetch(
-        `https://localhost:7050/api/Citas/buscarcita?fecha=${fechaFormateada}&idUsuario=${idUsuario}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setCitas(data);
-      } else {
-        setCitas([]);
-      }
-    } catch (error) {
-      setCitas([]);
-    }
-  };
-
   useEffect(() => {
-    cargarCitas(fecha);
+    const cargarDatos = async () => {
+      const data = await cargarCitas(fecha, idUsuario);
+      setCitas(data);
+    };
+
+    cargarDatos();
   }, [fecha]);
 
   const handleAccion = (accion, cita) => {
@@ -66,7 +54,6 @@ export default function GestionReservas() {
           </Typography>
         </Grid>
 
-        {/* Leyenda */}
         <Grid
           item
           xs={12}
