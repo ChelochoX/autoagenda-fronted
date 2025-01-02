@@ -317,6 +317,41 @@ export default function ReservaCard({ cita, onActualizacion }) {
             </Typography>
           )}
         </Box>
+        {/* Agregar servicios */}
+        <Box mt={2}>
+          <Typography variant="h6" style={{ fontWeight: "bold" }}>
+            Servicios asociados:
+          </Typography>
+          {cita.detallesCita && cita.detallesCita.length > 0 ? (
+            cita.detallesCita.map((detalle, index) => (
+              <Box
+                key={index}
+                style={{
+                  marginTop: "10px",
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  backgroundColor: "#f9f9f9",
+                }}
+              >
+                <Typography variant="body2">
+                  <strong>Tipo:</strong> {detalle.tipoServicio}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Descripción:</strong> {detalle.descripcion}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Precio:</strong> $
+                  {detalle.precioServicio.toLocaleString()}
+                </Typography>
+              </Box>
+            ))
+          ) : (
+            <Typography variant="body2" color="textSecondary">
+              No hay servicios asociados.
+            </Typography>
+          )}
+        </Box>
 
         <Box
           style={{
