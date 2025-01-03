@@ -1,22 +1,19 @@
 import { BASE_URL } from "../../../config";
 
-export const crearFichaTecnica = async (request) => {
+export const obtenerFichaPorCita = async (idCita) => {
   try {
-    const response = await fetch(`${BASE_URL}/api/FichaTecnica/crear`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(request),
-    });
-
+    const response = await fetch(
+      `${BASE_URL}/api/FichaTecnica/porcita/${idCita}`
+    );
     if (!response.ok) {
-      throw new Error(`Error al crear la ficha técnica: ${response.status}`);
+      throw new Error(
+        `Error al obtener la ficha técnica: ${response.status} ${response.statusText}`
+      );
     }
-
-    return await response.json();
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error("Error al crear la ficha técnica:", error);
+    console.error("Error en obtenerFichaPorCita:", error);
     throw error;
   }
 };

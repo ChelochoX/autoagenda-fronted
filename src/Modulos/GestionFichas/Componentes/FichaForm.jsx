@@ -10,6 +10,7 @@ import {
   TextField,
   Button,
   MenuItem,
+  Divider,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
@@ -18,6 +19,7 @@ import BuildIcon from "@mui/icons-material/Build";
 import { obtenerMecanicos } from "../Services/mecanicoService";
 
 const FichaForm = ({ ficha, onFichaActualizada }) => {
+  // Funciones auxiliares para formateo
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -28,14 +30,12 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
     });
   };
 
-  const formatCurrency = (value) => {
+  const formatGuarani = (value) => {
     if (!value) return "N/A";
-    return new Intl.NumberFormat("es-ES", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
+    return new Intl.NumberFormat("es-PY").format(value) + " Gs.";
   };
 
+  // Estados del formulario
   const [kilometrajeIngreso, setKilometrajeIngreso] = useState(
     ficha.kilometrajeIngreso || ""
   );
@@ -45,18 +45,17 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
   const [detallesServicio, setDetallesServicio] = useState(
     ficha.detallesServicio || ""
   );
-  // Lista de mecánicos desde la base de datos
   const [mecanicos, setMecanicos] = useState([]);
   const [mecanicoSeleccionado, setMecanicoSeleccionado] = useState(
     ficha.mecanicoResponsable || ""
   );
 
-  // Traer mecánicos desde el backend
+  // Obtener mecánicos desde el backend
   useEffect(() => {
     const fetchMecanicos = async () => {
       try {
         const data = await obtenerMecanicos();
-        setMecanicos(data); // Guardar la lista en el estado
+        setMecanicos(data);
       } catch (error) {
         console.error("Error al obtener los mecánicos:", error);
       }
@@ -65,13 +64,14 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
     fetchMecanicos();
   }, []);
 
+  // Handlers
   const handleGuardar = () => {
     const fichaActualizada = {
       ...ficha,
       kilometrajeIngreso: parseInt(kilometrajeIngreso.replace(/\./g, ""), 10),
       kilometrajeProximo: parseInt(kilometrajeProximo.replace(/\./g, ""), 10),
       detallesServicio,
-      mecanicoResponsable: mecanicoSeleccionado, // Actualizar correctamente el mecánico seleccionado
+      mecanicoResponsable: mecanicoSeleccionado,
     };
     onFichaActualizada(fichaActualizada);
   };
@@ -81,11 +81,6 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
     setKilometrajeProximo(ficha.kilometrajeProximo || "");
     setDetallesServicio(ficha.detallesServicio || "");
     setMecanicoSeleccionado(ficha.mecanicoResponsable || "");
-  };
-
-  const formatGuarani = (value) => {
-    if (!value) return "N/A";
-    return new Intl.NumberFormat("es-PY").format(value) + " Gs.";
   };
 
   return (
@@ -115,6 +110,7 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
       </Typography>
 
       <Grid container spacing={2}>
+        {/* Información del Cliente */}
         <Grid item xs={12} md={6}>
           <Card sx={{ height: "100%", boxShadow: 2 }}>
             <CardHeader
@@ -146,6 +142,7 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
           </Card>
         </Grid>
 
+        {/* Información del Vehículo */}
         <Grid item xs={12} md={6}>
           <Card sx={{ height: "100%", boxShadow: 2 }}>
             <CardHeader
@@ -182,6 +179,7 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
           </Card>
         </Grid>
 
+        {/* Datos de la Cita */}
         <Grid item xs={12}>
           <Card sx={{ boxShadow: 2 }}>
             <CardHeader
@@ -206,23 +204,39 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
                 <Typography variant="body2">
                   <strong>Estado:</strong> {ficha.estado || "N/A"}
                 </Typography>
-                <Typography variant="body2">
-                  <strong>Tipo de Servicio:</strong>{" "}
-                  {ficha.tipoServicio || "N/A"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Descripción del Servicio:</strong>{" "}
-                  {ficha.descripcionServicio || "N/A"}
-                </Typography>
-                <Typography variant="body2">
-                  <strong>Costo del Servicio:</strong>{" "}
-                  {formatGuarani(ficha.costoServicio)}
-                </Typography>
+                <Divider sx={{ my: 1 }} />
+                <Typography variant="h6">Servicios Solicitados:</Typography>
+                {ficha.detallesServicios &&
+                ficha.detallesServicios.length > 0 ? (
+                  ficha.detallesServicios.map((servicio, index) => (
+                    <Box key={index} sx={{ pl: 2 }}>
+                      <Typography variant="body2">
+                        <strong>Tipo:</strong> {servicio.tipoServicio}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Descripción:</strong>{" "}
+                        {servicio.descripcion || "N/A"}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Costo:</strong>{" "}
+                        {formatGuarani(servicio.precioServicio)}
+                      </Typography>
+                      {index !== ficha.detallesServicios.length - 1 && (
+                        <Divider sx={{ my: 1 }} />
+                      )}
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body2">
+                    No hay servicios asociados.
+                  </Typography>
+                )}
               </Stack>
             </CardContent>
           </Card>
         </Grid>
 
+        {/* Detalles de la Ficha Técnica */}
         <Grid item xs={12}>
           <Card sx={{ boxShadow: 2 }}>
             <CardHeader

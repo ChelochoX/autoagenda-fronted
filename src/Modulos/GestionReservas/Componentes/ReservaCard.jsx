@@ -24,6 +24,7 @@ import {
   actualizarCita,
   actualizarEstadoCita,
   obtenerUsuarioPorId,
+  crearFichaTecnica,
 } from "../Services/fichasService";
 import "../Estilos/ReservaCard.css";
 
@@ -72,7 +73,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
 
       const data = {
         hora: formattedHora,
-        descripcion: updatedDescripcion,
       };
 
       await actualizarCita(cita.idCita, data);
@@ -96,21 +96,45 @@ export default function ReservaCard({ cita, onActualizacion }) {
 
   const handleActualizarEstado = async (nuevoEstado) => {
     try {
-      await actualizarEstadoCita(cita.idCita, nuevoEstado); // Pasar el estado como string
+      // Actualizar el estado de la cita
+      await actualizarEstadoCita(cita.idCita, nuevoEstado);
       setEstadoCita(nuevoEstado);
-      setAlert({
-        type: "success",
-        message: `Estado cambiado a ${nuevoEstado}.`,
-        visible: true,
-      });
+
+      // Si el estado es "aprobado", crear la ficha técnica
+      if (nuevoEstado === "aprobado") {
+        const fichaRequest = {
+          idCita: cita.idCita,
+          kilometrajeIngreso: 0,
+          kilometrajeProximo: 0,
+          detallesServicio: "",
+          mecanicoResponsable: "",
+        };
+
+        await crearFichaTecnica(fichaRequest);
+        setAlert({
+          type: "success",
+          message: "¡Cita aprobada y ficha técnica creada exitosamente!",
+          visible: true,
+        });
+      } else {
+        setAlert({
+          type: "success",
+          message: `Estado cambiado a ${nuevoEstado}.`,
+          visible: true,
+        });
+      }
 
       if (onActualizacion) onActualizacion();
     } catch (error) {
       setAlert({
         type: "error",
-        message: "Hubo un error al actualizar el estado.",
+        message:
+          nuevoEstado === "aprobado"
+            ? "Hubo un error al aprobar la cita o crear la ficha técnica."
+            : "Hubo un error al actualizar el estado.",
         visible: true,
       });
+      console.error("Error en handleActualizarEstado:", error);
     }
   };
 
@@ -300,23 +324,6 @@ export default function ReservaCard({ cita, onActualizacion }) {
           )}
         </Box>
 
-        <Box display="flex" flexDirection="column" mt={1}>
-          <Typography variant="body1" component="span" fontWeight="bold">
-            Descripción:
-          </Typography>
-          {isEditing ? (
-            <TextField
-              value={updatedDescripcion}
-              onChange={(e) => setUpdatedDescripcion(e.target.value)}
-              size="small"
-              fullWidth
-            />
-          ) : (
-            <Typography variant="body1" component="span" sx={{ mt: 1 }}>
-              {updatedDescripcion}
-            </Typography>
-          )}
-        </Box>
         {/* Agregar servicios */}
         <Box mt={2}>
           <Typography variant="h6" style={{ fontWeight: "bold" }}>
@@ -341,7 +348,7 @@ export default function ReservaCard({ cita, onActualizacion }) {
                   <strong>Descripción:</strong> {detalle.descripcion}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Precio:</strong> $
+                  <strong>Precio:</strong> Gs{" "}
                   {detalle.precioServicio.toLocaleString()}
                 </Typography>
               </Box>

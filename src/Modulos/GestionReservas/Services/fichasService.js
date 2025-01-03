@@ -1,24 +1,6 @@
 import { BASE_URL } from "../../../config";
 import { format } from "date-fns";
 
-export const obtenerFichaPorCita = async (idCita) => {
-  try {
-    const response = await fetch(
-      `${BASE_URL}/api/FichaTecnica/porcita/${idCita}`
-    );
-    if (!response.ok) {
-      throw new Error(
-        `Error al obtener la ficha técnica: ${response.status} ${response.statusText}`
-      );
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error en obtenerFichaPorCita:", error);
-    throw error;
-  }
-};
-
 export const obtenerUsuarioPorId = async (idUsuario) => {
   try {
     const response = await fetch(`${BASE_URL}/api/Usuarios/${idUsuario}`);
@@ -91,5 +73,25 @@ export const cargarCitas = async (fecha, idUsuario) => {
   } catch (error) {
     console.error("Error en cargarCitas:", error);
     return [];
+  }
+};
+export const crearFichaTecnica = async (request) => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/FichaTecnica/crear`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al crear la ficha técnica: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error al crear la ficha técnica:", error);
+    throw error;
   }
 };
