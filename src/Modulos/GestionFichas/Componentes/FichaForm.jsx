@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -17,8 +18,11 @@ import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import EventIcon from "@mui/icons-material/Event";
 import BuildIcon from "@mui/icons-material/Build";
 import { obtenerMecanicos } from "../Services/mecanicoService";
+import { actualizarFichaTecnica } from "../Services/fichaService";
+import { actualizarEstadoCita } from "../../GestionReservas/Services/fichasService";
 
 const FichaForm = ({ ficha, onFichaActualizada }) => {
+  const navigate = useNavigate();
   // Funciones auxiliares para formateo
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -64,18 +68,40 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
     fetchMecanicos();
   }, []);
 
-  // Handlers
-  const handleGuardar = () => {
-    const fichaActualizada = {
-      ...ficha,
-      kilometrajeIngreso: parseInt(kilometrajeIngreso.replace(/\./g, ""), 10),
-      kilometrajeProximo: parseInt(kilometrajeProximo.replace(/\./g, ""), 10),
-      detallesServicio,
-      mecanicoResponsable: mecanicoSeleccionado,
-    };
-    onFichaActualizada(fichaActualizada);
+  // Handler para guardar
+  const handleGuardar = async () => {
+    try {
+      // Validar y convertir el valor de kilometrajeIngreso y kilometrajeProximo
+      const ingreso = kilometrajeIngreso ? String(kilometrajeIngreso) : "0"; // Si es null o undefined, usar "0"
+      const proximo = kilometrajeProximo ? String(kilometrajeProximo) : "0";
+
+      const fichaActualizada = {
+        ...ficha,
+        kilometrajeIngreso: parseInt(ingreso.replace(/\./g, ""), 10),
+        kilometrajeProximo: parseInt(proximo.replace(/\./g, ""), 10),
+        detallesServicio,
+        mecanicoResponsable: mecanicoSeleccionado,
+      };
+
+      // Paso 1: Actualizar la ficha técnica
+      await actualizarFichaTecnica(fichaActualizada.idFicha, fichaActualizada);
+      console.log("Ficha técnica actualizada correctamente.");
+
+      // Paso 2: Actualizar el estado de la cita a "cerrado"
+      await actualizarEstadoCita(ficha.idCita, "cerrado");
+      console.log("Estado de la cita actualizado a cerrado.");
+
+      // Paso 3: Redirigir a la página de gestión de reservas
+      navigate("/gestionreservas");
+    } catch (error) {
+      console.error("Error al procesar la ficha técnica:", error);
+      alert(
+        "Ocurrió un error al procesar la ficha técnica. Por favor, inténtalo nuevamente."
+      );
+    }
   };
 
+  // Handler para cancelar
   const handleCancelar = () => {
     setKilometrajeIngreso(ficha.kilometrajeIngreso || "");
     setKilometrajeProximo(ficha.kilometrajeProximo || "");
