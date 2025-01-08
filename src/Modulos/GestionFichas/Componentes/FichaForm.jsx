@@ -23,36 +23,39 @@ import { actualizarEstadoCita } from "../../GestionReservas/Services/fichasServi
 
 const FichaForm = ({ ficha, onFichaActualizada }) => {
   const navigate = useNavigate();
-  // Funciones auxiliares para formateo
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
-
-  const formatGuarani = (value) => {
-    if (!value) return "N/A";
-    return new Intl.NumberFormat("es-PY").format(value) + " Gs.";
-  };
 
   // Estados del formulario
-  const [kilometrajeIngreso, setKilometrajeIngreso] = useState(
-    ficha.kilometrajeIngreso || ""
-  );
-  const [kilometrajeProximo, setKilometrajeProximo] = useState(
-    ficha.kilometrajeProximo || ""
-  );
-  const [detallesServicio, setDetallesServicio] = useState(
-    ficha.detallesServicio || ""
-  );
+  const [kilometrajeIngreso, setKilometrajeIngreso] = useState("");
+  const [kilometrajeProximo, setKilometrajeProximo] = useState("");
+  const [detallesServicio, setDetallesServicio] = useState("");
+  const [mecanicoSeleccionado, setMecanicoSeleccionado] = useState("");
   const [mecanicos, setMecanicos] = useState([]);
-  const [mecanicoSeleccionado, setMecanicoSeleccionado] = useState(
-    ficha.mecanicoResponsable || ""
-  );
+
+  // Resetear los valores del formulario
+  const resetForm = () => {
+    setKilometrajeIngreso("");
+    setKilometrajeProximo("");
+    setDetallesServicio("");
+    setMecanicoSeleccionado("");
+  };
+
+  // Efecto para inicializar o resetear el formulario al montar el componente
+  useEffect(() => {
+    resetForm(); // Limpiar formulario al cargar la página
+    if (ficha) {
+      setKilometrajeIngreso(ficha.kilometrajeIngreso || "");
+      setKilometrajeProximo(ficha.kilometrajeProximo || "");
+      setDetallesServicio(ficha.detallesServicio || "");
+      setMecanicoSeleccionado(
+        mecanicos.find(
+          (m) =>
+            `${m.nombre} ${m.apellido}` === (ficha.mecanicoResponsable || "")
+        )
+          ? ficha.mecanicoResponsable
+          : ""
+      );
+    }
+  }, [ficha, mecanicos]);
 
   // Obtener mecánicos desde el backend
   useEffect(() => {
@@ -71,14 +74,16 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
   // Handler para guardar
   const handleGuardar = async () => {
     try {
-      // Validar y convertir el valor de kilometrajeIngreso y kilometrajeProximo
-      const ingreso = kilometrajeIngreso ? String(kilometrajeIngreso) : "0"; // Si es null o undefined, usar "0"
-      const proximo = kilometrajeProximo ? String(kilometrajeProximo) : "0";
-
       const fichaActualizada = {
         ...ficha,
-        kilometrajeIngreso: parseInt(ingreso.replace(/\./g, ""), 10),
-        kilometrajeProximo: parseInt(proximo.replace(/\./g, ""), 10),
+        kilometrajeIngreso: parseInt(
+          (kilometrajeIngreso || "0").replace(/\./g, ""),
+          10
+        ),
+        kilometrajeProximo: parseInt(
+          (kilometrajeProximo || "0").replace(/\./g, ""),
+          10
+        ),
         detallesServicio,
         mecanicoResponsable: mecanicoSeleccionado,
       };
@@ -94,19 +99,33 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
       // Paso 3: Redirigir a la página de gestión de reservas
       navigate("/gestionreservas");
     } catch (error) {
-      console.error("Error al procesar la ficha técnica:", error);
+      console.error("Error al guardar la ficha técnica:", error);
       alert(
-        "Ocurrió un error al procesar la ficha técnica. Por favor, inténtalo nuevamente."
+        "Ocurrió un error al guardar la ficha técnica. Por favor, inténtalo nuevamente."
       );
     }
   };
 
   // Handler para cancelar
   const handleCancelar = () => {
-    setKilometrajeIngreso(ficha.kilometrajeIngreso || "");
-    setKilometrajeProximo(ficha.kilometrajeProximo || "");
-    setDetallesServicio(ficha.detallesServicio || "");
-    setMecanicoSeleccionado(ficha.mecanicoResponsable || "");
+    resetForm();
+  };
+
+  // Función para formatear fechas
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  // Función para formatear números en Guaraní
+  const formatGuarani = (value) => {
+    if (!value) return "N/A";
+    return new Intl.NumberFormat("es-PY").format(value) + " Gs.";
   };
 
   return (
@@ -155,13 +174,13 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
             <CardContent>
               <Stack spacing={1}>
                 <Typography variant="body2">
-                  <strong>Nombre:</strong> {ficha.nombreCliente || "N/A"}
+                  <strong>Nombre:</strong> {ficha?.nombreCliente || "N/A"}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Correo:</strong> {ficha.correoCliente || "N/A"}
+                  <strong>Correo:</strong> {ficha?.correoCliente || "N/A"}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Teléfono:</strong> {ficha.telefonoCliente || "N/A"}
+                  <strong>Teléfono:</strong> {ficha?.telefonoCliente || "N/A"}
                 </Typography>
               </Stack>
             </CardContent>
@@ -189,16 +208,16 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
             <CardContent>
               <Stack spacing={1}>
                 <Typography variant="body2">
-                  <strong>Placa:</strong> {ficha.placaVehiculo || "N/A"}
+                  <strong>Placa:</strong> {ficha?.placaVehiculo || "N/A"}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Marca:</strong> {ficha.nombreMarca || "N/A"}
+                  <strong>Marca:</strong> {ficha?.nombreMarca || "N/A"}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Modelo:</strong> {ficha.nombreModelo || "N/A"}
+                  <strong>Modelo:</strong> {ficha?.nombreModelo || "N/A"}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Año:</strong> {ficha.anhoVehiculo || "N/A"}
+                  <strong>Año:</strong> {ficha?.anhoVehiculo || "N/A"}
                 </Typography>
               </Stack>
             </CardContent>
@@ -222,18 +241,17 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
             <CardContent>
               <Stack spacing={1}>
                 <Typography variant="body2">
-                  <strong>Fecha:</strong> {formatDate(ficha.fechaCita)}
+                  <strong>Fecha:</strong> {formatDate(ficha?.fechaCita)}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Hora:</strong> {ficha.horaCita || "N/A"}
+                  <strong>Hora:</strong> {ficha?.horaCita || "N/A"}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Estado:</strong> {ficha.estado || "N/A"}
+                  <strong>Estado:</strong> {ficha?.estado || "N/A"}
                 </Typography>
                 <Divider sx={{ my: 1 }} />
                 <Typography variant="h6">Servicios Solicitados:</Typography>
-                {ficha.detallesServicios &&
-                ficha.detallesServicios.length > 0 ? (
+                {ficha?.detallesServicios?.length > 0 ? (
                   ficha.detallesServicios.map((servicio, index) => (
                     <Box key={index} sx={{ pl: 2 }}>
                       <Typography variant="body2">
@@ -300,9 +318,7 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
                   <TextField
                     label="Kilometraje de Ingreso"
                     value={kilometrajeIngreso}
-                    onChange={(e) =>
-                      setKilometrajeIngreso(e.target.value.replace(/\D/g, ""))
-                    }
+                    onChange={(e) => setKilometrajeIngreso(e.target.value)}
                     fullWidth
                   />
                 </Grid>
@@ -310,9 +326,7 @@ const FichaForm = ({ ficha, onFichaActualizada }) => {
                   <TextField
                     label="Kilometraje Próximo"
                     value={kilometrajeProximo}
-                    onChange={(e) =>
-                      setKilometrajeProximo(e.target.value.replace(/\D/g, ""))
-                    }
+                    onChange={(e) => setKilometrajeProximo(e.target.value)}
                     fullWidth
                   />
                 </Grid>
