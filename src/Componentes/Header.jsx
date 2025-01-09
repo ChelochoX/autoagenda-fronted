@@ -39,16 +39,16 @@ const Header = () => {
       shape: "polygon(30% 0, 90% 0, 100% 70%, 20% 100%)",
     },
     {
-      name: "Servicios",
-      path: "/servicios",
-      color: "#FFFF00",
-      shape: "polygon(15% 10%, 95% 0, 80% 90%, 0 85%)",
-    },
-    {
       name: "Gestión Reservas", // Nuevo enlace
       path: "/gestionreservas",
       color: "#FFA500", // Color naranja
       shape: "polygon(20% 0, 80% 10%, 100% 80%, 10% 100%)", // Nuevo diseño
+    },
+    {
+      name: "Pagos",
+      path: "/pagos",
+      color: "#FFFF00",
+      shape: "polygon(15% 10%, 95% 0, 80% 90%, 0 85%)",
     },
   ];
 
