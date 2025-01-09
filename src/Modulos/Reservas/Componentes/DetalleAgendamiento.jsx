@@ -89,20 +89,22 @@ const DetalleAgendamiento = ({ citas, onEliminarCita }) => {
                   position: "relative", // Para posicionar el botón de eliminar
                 }}
               >
-                {/* Botón de eliminar */}
-                <IconButton
-                  aria-label="eliminar"
-                  onClick={() => onEliminarCita(cita.idCita)}
-                  sx={{
-                    position: "absolute",
-                    top: "5px",
-                    right: "5px",
-                    color: "#e57373", // Rojo más claro
-                    "&:hover": { color: "#ef9a9a" }, // Cambio de color al pasar el cursor
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
+                {/* Botón de eliminar, solo si el estado no es "cerrado" */}
+                {cita.estado.toLowerCase() !== "cerrado" && (
+                  <IconButton
+                    aria-label="eliminar"
+                    onClick={() => onEliminarCita(cita.idCita)}
+                    sx={{
+                      position: "absolute",
+                      top: "5px",
+                      right: "5px",
+                      color: "#e57373", // Rojo más claro
+                      "&:hover": { color: "#ef9a9a" }, // Cambio de color al pasar el cursor
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                )}
 
                 {/* Información de la cita */}
                 <Typography
