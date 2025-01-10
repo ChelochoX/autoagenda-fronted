@@ -17,6 +17,7 @@ import {
 import login from "../Assets/iconos/login.png";
 import logo from "../Assets/imagenes/logomecanic.jpg"; // Imagen del logo
 import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
 
 const Header = () => {
   const links = [
@@ -33,12 +34,6 @@ const Header = () => {
       shape: "polygon(10% 0, 90% 10%, 100% 90%, 0 70%)",
     },
     {
-      name: "Contacto",
-      path: "/contacto",
-      color: "#0000FF",
-      shape: "polygon(30% 0, 90% 0, 100% 70%, 20% 100%)",
-    },
-    {
       name: "Gestión Reservas", // Nuevo enlace
       path: "/gestionreservas",
       color: "#FFA500", // Color naranja
@@ -49,6 +44,12 @@ const Header = () => {
       path: "/pagos",
       color: "#FFFF00",
       shape: "polygon(15% 10%, 95% 0, 80% 90%, 0 85%)",
+    },
+    {
+      name: "Contacto",
+      path: "/contacto",
+      color: "#0000FF",
+      shape: "polygon(30% 0, 90% 0, 100% 70%, 20% 100%)",
     },
   ];
 
@@ -195,43 +196,69 @@ const Header = () => {
       {/* Menú lateral para dispositivos móviles */}
       {isMobile && (
         <Drawer anchor="right" open={openMenu} onClose={handleDrawerToggle}>
-          <List sx={{ paddingTop: "20px", paddingBottom: "20px" }}>
-            {links.map((link, index) => (
-              <ListItem
-                key={index}
-                button
-                component={Link}
-                to={link.path}
-                onClick={() => {
-                  handleDrawerToggle(); // Cierra el menú al hacer clic en un enlace
-                }}
-                sx={{
-                  padding: "10px 20px",
-                  fontSize: "1rem", // Tamaño más pequeño para los enlaces en móvil
-                  textAlign: "center",
-                  position: "relative",
-                  color: "#000",
-                  "&::before": {
-                    content: '""',
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: link.color,
-                    clipPath: link.shape,
-                    zIndex: -1,
-                    transition: "all 0.3s ease",
-                  },
-                  "&:hover::before": {
-                    transform: "scale(1.1)",
-                  },
-                }}
-              >
-                {link.name}
-              </ListItem>
-            ))}
-          </List>
+          <Box
+            sx={{ display: "flex", flexDirection: "column", width: "250px" }}
+          >
+            {/* Botón de cruz para cerrar */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                padding: "10px",
+              }}
+            >
+              <IconButton onClick={handleDrawerToggle}>
+                <CloseIcon sx={{ color: "#000", fontSize: "2rem" }} />
+              </IconButton>
+            </Box>
+
+            {/* Lista de enlaces */}
+            <List sx={{ paddingTop: "10px", paddingBottom: "10px" }}>
+              {links.map((link, index) => (
+                <ListItem
+                  key={index}
+                  component="div"
+                  onClick={() => {
+                    handleDrawerToggle(); // Cierra el menú al hacer clic en un enlace
+                  }}
+                  sx={{
+                    padding: "10px 20px",
+                    fontSize: "1rem", // Tamaño más pequeño para los enlaces en móvil
+                    textAlign: "center",
+                    position: "relative",
+                    color: "#000",
+                    "&::before": {
+                      content: '""',
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: link.color,
+                      clipPath: link.shape,
+                      zIndex: -1,
+                      transition: "all 0.3s ease",
+                    },
+                    "&:hover::before": {
+                      transform: "scale(1.1)",
+                    },
+                  }}
+                >
+                  <Link
+                    to={link.path}
+                    style={{
+                      textDecoration: "none",
+                      color: "inherit",
+                      display: "block",
+                      width: "100%",
+                    }}
+                  >
+                    {link.name}
+                  </Link>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
         </Drawer>
       )}
     </AppBar>
