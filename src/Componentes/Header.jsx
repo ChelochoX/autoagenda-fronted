@@ -74,8 +74,9 @@ const Header = () => {
     <AppBar
       position="sticky"
       sx={{
-        backgroundColor: "#b0b0b0", // Fondo más oscuro (gris claro oscuro)
+        backgroundColor: "#dcdcdc", // Gris más oscuro que el fondo global
         padding: "10px 20px",
+        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)", // Agrega una sombra suave para destacar
       }}
     >
       <Toolbar sx={{ justifyContent: "space-between" }}>

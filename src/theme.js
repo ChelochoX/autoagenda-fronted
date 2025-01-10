@@ -12,7 +12,7 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: "#e0e0e0",
+          backgroundColor: "#f5f5f5", // Blanco perlado para el fondo
           margin: 0,
           padding: 0,
           fontFamily: "'Poppins', sans-serif",
