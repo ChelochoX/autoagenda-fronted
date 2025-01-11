@@ -1,9 +1,9 @@
-import { BASE_URL } from "../../../config";
+import { API_URL, BASE_PATH } from "../../../config";
 import { format } from "date-fns";
 
 export const obtenerUsuarioPorId = async (idUsuario) => {
   try {
-    const response = await fetch(`${BASE_URL}/api/Usuarios/${idUsuario}`);
+    const response = await fetch(`${API_URL}${BASE_PATH}Usuarios/${idUsuario}`);
     if (!response.ok) {
       throw new Error(
         `Error al obtener el usuario: ${response.status} ${response.statusText}`
@@ -19,13 +19,16 @@ export const obtenerUsuarioPorId = async (idUsuario) => {
 
 export const actualizarEstadoCita = async (idCita, nuevoEstado) => {
   try {
-    const response = await fetch(`${BASE_URL}/api/Citas/${idCita}/estado`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(nuevoEstado), // Asegúrate de incluir estadoDTO
-    });
+    const response = await fetch(
+      `${API_URL}${BASE_PATH}Citas/${idCita}/estado`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(nuevoEstado), // Asegúrate de incluir estadoDTO
+      }
+    );
     if (!response.ok) {
       throw new Error(
         `Error al actualizar el estado de la cita: ${response.status} ${response.statusText}`
@@ -40,7 +43,7 @@ export const actualizarEstadoCita = async (idCita, nuevoEstado) => {
 
 export const actualizarCita = async (idCita, body) => {
   try {
-    const response = await fetch(`${BASE_URL}/api/Citas/${idCita}`, {
+    const response = await fetch(`${API_URL}${BASE_PATH}Citas/${idCita}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -63,7 +66,7 @@ export const cargarCitas = async (fecha, idUsuario) => {
   const fechaFormateada = format(fecha, "yyyy-MM-dd");
   try {
     const response = await fetch(
-      `${BASE_URL}/api/Citas/buscarcita?fecha=${fechaFormateada}&idUsuario=${idUsuario}`
+      `${API_URL}${BASE_PATH}Citas/buscarcita?fecha=${fechaFormateada}&idUsuario=${idUsuario}`
     );
     if (response.ok) {
       return await response.json();
@@ -75,9 +78,10 @@ export const cargarCitas = async (fecha, idUsuario) => {
     return [];
   }
 };
+
 export const crearFichaTecnica = async (request) => {
   try {
-    const response = await fetch(`${BASE_URL}/api/FichaTecnica/crear`, {
+    const response = await fetch(`${API_URL}${BASE_PATH}FichaTecnica/crear`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

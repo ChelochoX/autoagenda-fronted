@@ -1,9 +1,9 @@
-import { BASE_URL } from "../../../config";
+import { API_URL, BASE_PATH } from "../../../config";
 
 export const obtenerFichaPorCita = async (idCita) => {
   try {
     const response = await fetch(
-      `${BASE_URL}/api/FichaTecnica/porcita/${idCita}`
+      `${API_URL}${BASE_PATH}FichaTecnica/porcita/${idCita}`
     );
     if (!response.ok) {
       throw new Error(
@@ -20,7 +20,7 @@ export const obtenerFichaPorCita = async (idCita) => {
 
 export const actualizarFichaTecnica = async (id, ficha) => {
   try {
-    const response = await fetch(`${BASE_URL}/api/FichaTecnica/${id}`, {
+    const response = await fetch(`${API_URL}${BASE_PATH}FichaTecnica/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

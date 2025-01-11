@@ -1,11 +1,10 @@
-// citasService.js
+import { API_URL, BASE_PATH } from "../../../config";
 
-const API_URL = "https://localhost:7050/api";
-
-// Obtener tipos de servicios
 export const obtenerTiposServicios = async () => {
   try {
-    const response = await fetch(`${API_URL}/TipoServicios/tiposservicios`);
+    const response = await fetch(
+      `${API_URL}${BASE_PATH}TipoServicios/tiposservicios`
+    );
     if (!response.ok) {
       throw new Error(
         `Error al obtener tipos de servicios: ${response.status}`
@@ -18,10 +17,9 @@ export const obtenerTiposServicios = async () => {
   }
 };
 
-// Crear una nueva cita con detalles
 export const crearCitaConDetalles = async (citaConDetalles) => {
   try {
-    const response = await fetch(`${API_URL}/Citas/crear`, {
+    const response = await fetch(`${API_URL}${BASE_PATH}Citas/crear`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(citaConDetalles),
@@ -37,10 +35,9 @@ export const crearCitaConDetalles = async (citaConDetalles) => {
   }
 };
 
-// Obtener marcas de vehículos
 export const obtenerMarcas = async () => {
   try {
-    const response = await fetch(`${API_URL}/Vehiculos/marcas`);
+    const response = await fetch(`${API_URL}${BASE_PATH}Vehiculos/marcas`);
     if (!response.ok) {
       throw new Error(`Error al obtener marcas: ${response.status}`);
     }
@@ -51,10 +48,11 @@ export const obtenerMarcas = async () => {
   }
 };
 
-// Obtener modelos de vehículos por marca
 export const obtenerModelosPorMarca = async (idMarca) => {
   try {
-    const response = await fetch(`${API_URL}/Vehiculos/modelos/${idMarca}`);
+    const response = await fetch(
+      `${API_URL}${BASE_PATH}Vehiculos/modelos/${idMarca}`
+    );
     if (!response.ok) {
       throw new Error(`Error al obtener modelos: ${response.status}`);
     }
@@ -65,10 +63,9 @@ export const obtenerModelosPorMarca = async (idMarca) => {
   }
 };
 
-// Obtener años de vehículos
 export const obtenerAnhos = async () => {
   try {
-    const response = await fetch(`${API_URL}/Vehiculos/anhos`);
+    const response = await fetch(`${API_URL}${BASE_PATH}Vehiculos/anhos`);
     if (!response.ok) {
       throw new Error(`Error al obtener años: ${response.status}`);
     }
@@ -79,10 +76,9 @@ export const obtenerAnhos = async () => {
   }
 };
 
-// Crear un nuevo vehículo
 export const crearVehiculo = async (vehiculo) => {
   try {
-    const response = await fetch(`${API_URL}/Vehiculos/crear`, {
+    const response = await fetch(`${API_URL}${BASE_PATH}Vehiculos/crear`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(vehiculo),
@@ -98,16 +94,14 @@ export const crearVehiculo = async (vehiculo) => {
   }
 };
 
-// Obtener citas por fecha e ID de usuario
 export const obtenerCitasPorFechaYUsuario = async (fecha, idUsuario) => {
   try {
     const response = await fetch(
-      `${API_URL}/Citas/buscarcita?fecha=${fecha}&idUsuario=${idUsuario}`
+      `${API_URL}${BASE_PATH}Citas/buscarcita?fecha=${fecha}&idUsuario=${idUsuario}`
     );
 
     if (response.status === 204) {
-      // Si el backend devuelve 204, significa que no hay citas
-      return []; // Devuelve un array vacío al frontend
+      return []; // Devuelve un array vacío si no hay citas
     }
 
     if (!response.ok) {
@@ -116,17 +110,16 @@ export const obtenerCitasPorFechaYUsuario = async (fecha, idUsuario) => {
       );
     }
 
-    return await response.json(); // Analiza la respuesta si es válida
+    return await response.json();
   } catch (error) {
     console.error("Error en obtenerCitasPorFechaYUsuario:", error);
-    throw error; // Vuelve a lanzar el error para manejarlo en el componente
+    throw error;
   }
 };
 
-// Eliminar una cita
 export const eliminarCita = async (idCita) => {
   try {
-    const response = await fetch(`${API_URL}/Citas/${idCita}`, {
+    const response = await fetch(`${API_URL}${BASE_PATH}Citas/${idCita}`, {
       method: "DELETE",
     });
     if (!response.ok) {
