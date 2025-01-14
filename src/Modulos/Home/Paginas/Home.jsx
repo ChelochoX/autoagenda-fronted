@@ -6,13 +6,13 @@ const flyers = [
     id: 1,
     title: "Promoción 1",
     description: "¡Descubre nuestras increíbles promociones para tu vehículo!",
-    image: "/src/assets/imagenes/mecanico.png", // Ruta al flyer 1
+    image: "/imagenes/mecanico.png", // Ruta al flyer 1
   },
   {
     id: 2,
     title: "Servicio Premium",
     description: "El mejor cuidado y mantenimiento para tu vehículo.",
-    image: "/src/assets/imagenes/mecanico1.png", // Ruta al flyer 2
+    image: "/imagenes/mecanico1.png", // Ruta al flyer 2
   },
 ];
 
