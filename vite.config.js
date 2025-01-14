@@ -8,6 +8,6 @@ export default defineConfig({
     "process.env": process.env,
   },
   build: {
-    outDir: "build", // Cambia el directorio de salida a "build"
+    outDir: "dist", // Cambia el directorio de salida a "dist"
   },
 });
