@@ -7,4 +7,7 @@ export default defineConfig({
   define: {
     "process.env": process.env,
   },
+  build: {
+    outDir: "build", // Cambia el directorio de salida a "build"
+  },
 });

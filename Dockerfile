@@ -19,7 +19,7 @@ FROM node:16-alpine
 WORKDIR /app
 
 # Copiar el build generado
-COPY --from=build /app/build /app/build
+COPY --from=build /app/dist /app/build
 
 # Instalar un servidor estático simple (serve)
 RUN npm install -g serve
