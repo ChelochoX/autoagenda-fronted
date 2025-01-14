@@ -14,8 +14,8 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import login from "../Assets/iconos/login.png";
-import logo from "../Assets/imagenes/logomecanic.jpg"; // Imagen del logo
+import login from "../assets/iconos/login.png";
+import logo from "../assets/imagenes/logomecanic.jpg";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 
