@@ -1,13 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// https://vitejs.dev/config/
 export default defineConfig({
+  base: "/", // La base para tu aplicación
   plugins: [react()],
   define: {
     "process.env": process.env,
   },
   build: {
-    outDir: "dist", // Cambia el directorio de salida a "dist"
+    outDir: "dist", // Directorio de salida
   },
 });

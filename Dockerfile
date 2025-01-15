@@ -1,5 +1,5 @@
 # Etapa 1: Construcción de la aplicación
-FROM node:16-alpine AS build
+FROM node:18-alpine AS build
 WORKDIR /app
 
 # Copiar archivos de configuración de npm
@@ -12,10 +12,11 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 # Construir la aplicación para producción
+RUN npm install -g vite
 RUN npm run build
 
 # Etapa 2: Servir la aplicación con un servidor Node.js ligero
-FROM node:16-alpine
+FROM node:18-alpine
 WORKDIR /app
 
 # Copiar el build generado

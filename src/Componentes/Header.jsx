@@ -14,8 +14,6 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import login from "../assets/iconos/login.png";
-import logo from "../assets/imagenes/logomecanic.jpg";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -55,7 +53,6 @@ const Header = () => {
 
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [openMenu, setOpenMenu] = React.useState(false);
-  const open = Boolean(anchorEl);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md")); // Detecta si es móvil
 
@@ -84,10 +81,10 @@ const Header = () => {
         {/* Logo en la esquina izquierda */}
         <Box>
           <img
-            src={logo}
+            src="/imagenes/logomecanic.jpg" // Ruta desde `public`
             alt="Logo Empresa"
             style={{
-              height: isMobile ? "40px" : "80px", // Ajusta la altura según el dispositivo
+              height: isMobile ? "40px" : "80px",
               cursor: "pointer",
             }}
           />
@@ -144,7 +141,7 @@ const Header = () => {
             sx={{ color: "#000" }}
           >
             <img
-              src={login}
+              src="/imagenes/login.png" // Ruta desde `public`
               alt="Login"
               style={{
                 width: "2rem",
@@ -154,7 +151,6 @@ const Header = () => {
                 padding: "2px",
                 transition: "all 0.3s ease",
               }}
-              className="login-icon"
             />
           </IconButton>
           <Menu
@@ -169,7 +165,7 @@ const Header = () => {
               vertical: "top",
               horizontal: "right",
             }}
-            open={open}
+            open={Boolean(anchorEl)}
             onClose={handleMenuClose}
           >
             <MenuItem onClick={handleMenuClose}>Iniciar Sesión</MenuItem>
@@ -192,75 +188,6 @@ const Header = () => {
           </IconButton>
         )}
       </Toolbar>
-
-      {/* Menú lateral para dispositivos móviles */}
-      {isMobile && (
-        <Drawer anchor="right" open={openMenu} onClose={handleDrawerToggle}>
-          <Box
-            sx={{ display: "flex", flexDirection: "column", width: "250px" }}
-          >
-            {/* Botón de cruz para cerrar */}
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                padding: "10px",
-              }}
-            >
-              <IconButton onClick={handleDrawerToggle}>
-                <CloseIcon sx={{ color: "#000", fontSize: "2rem" }} />
-              </IconButton>
-            </Box>
-
-            {/* Lista de enlaces */}
-            <List sx={{ paddingTop: "10px", paddingBottom: "10px" }}>
-              {links.map((link, index) => (
-                <ListItem
-                  key={index}
-                  component="div"
-                  onClick={() => {
-                    handleDrawerToggle(); // Cierra el menú al hacer clic en un enlace
-                  }}
-                  sx={{
-                    padding: "10px 20px",
-                    fontSize: "1rem", // Tamaño más pequeño para los enlaces en móvil
-                    textAlign: "center",
-                    position: "relative",
-                    color: "#000",
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      width: "100%",
-                      height: "100%",
-                      backgroundColor: link.color,
-                      clipPath: link.shape,
-                      zIndex: -1,
-                      transition: "all 0.3s ease",
-                    },
-                    "&:hover::before": {
-                      transform: "scale(1.1)",
-                    },
-                  }}
-                >
-                  <Link
-                    to={link.path}
-                    style={{
-                      textDecoration: "none",
-                      color: "inherit",
-                      display: "block",
-                      width: "100%",
-                    }}
-                  >
-                    {link.name}
-                  </Link>
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        </Drawer>
-      )}
     </AppBar>
   );
 };
