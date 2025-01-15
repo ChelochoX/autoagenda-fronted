@@ -32,10 +32,10 @@ const Header = () => {
       shape: "polygon(10% 0, 90% 10%, 100% 90%, 0 70%)",
     },
     {
-      name: "Gestión Reservas", // Nuevo enlace
+      name: "Gestión Reservas",
       path: "/gestionreservas",
-      color: "#FFA500", // Color naranja
-      shape: "polygon(20% 0, 80% 10%, 100% 80%, 10% 100%)", // Nuevo diseño
+      color: "#FFA500",
+      shape: "polygon(20% 0, 80% 10%, 100% 80%, 10% 100%)",
     },
     {
       name: "Pagos",
@@ -54,7 +54,7 @@ const Header = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [openMenu, setOpenMenu] = React.useState(false);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // Detecta si es móvil
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -72,16 +72,16 @@ const Header = () => {
     <AppBar
       position="sticky"
       sx={{
-        backgroundColor: "#dcdcdc", // Gris más oscuro que el fondo global
+        backgroundColor: "#dcdcdc",
         padding: "10px 20px",
-        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)", // Agrega una sombra suave para destacar
+        boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
       }}
     >
       <Toolbar sx={{ justifyContent: "space-between" }}>
-        {/* Logo en la esquina izquierda */}
+        {/* Logo */}
         <Box>
           <img
-            src="/imagenes/logomecanic.jpg" // Ruta desde `public`
+            src="/imagenes/logomecanic.jpg"
             alt="Logo Empresa"
             style={{
               height: isMobile ? "40px" : "80px",
@@ -90,7 +90,7 @@ const Header = () => {
           />
         </Box>
 
-        {/* Menú de enlaces (escritorio) */}
+        {/* Menú Escritorio */}
         {!isMobile && (
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {links.map((link, index) => (
@@ -101,10 +101,10 @@ const Header = () => {
                 sx={{
                   position: "relative",
                   margin: "0 20px",
-                  color: "#000", // Negro para mejor legibilidad
-                  fontSize: "1rem", // Reducido el tamaño de letra
+                  color: "#000",
+                  fontSize: "1rem",
                   textTransform: "uppercase",
-                  fontWeight: "normal", // Sin negrita
+                  fontWeight: "normal",
                   letterSpacing: "0.1em",
                   "&::before": {
                     content: '""',
@@ -114,12 +114,12 @@ const Header = () => {
                     width: "100%",
                     height: "100%",
                     backgroundColor: link.color,
-                    clipPath: link.shape, // Forma dinámica
+                    clipPath: link.shape,
                     zIndex: -1,
                     transition: "all 0.3s ease",
                   },
                   "&:hover::before": {
-                    transform: "scale(1.1)", // Efecto hover
+                    transform: "scale(1.1)",
                   },
                 }}
               >
@@ -129,7 +129,7 @@ const Header = () => {
           </Box>
         )}
 
-        {/* Icono de Usuario con Efecto Hover */}
+        {/* Icono Usuario */}
         <Box>
           <IconButton
             size="large"
@@ -141,7 +141,7 @@ const Header = () => {
             sx={{ color: "#000" }}
           >
             <img
-              src="/imagenes/login.png" // Ruta desde `public`
+              src="/imagenes/login.png"
               alt="Login"
               style={{
                 width: "2rem",
@@ -173,7 +173,7 @@ const Header = () => {
           </Menu>
         </Box>
 
-        {/* Icono del Menú Hamburguesa (para móviles) */}
+        {/* Menú Hamburguesa */}
         {isMobile && (
           <IconButton
             size="large"
@@ -181,13 +181,75 @@ const Header = () => {
             aria-label="menu"
             onClick={handleDrawerToggle}
             sx={{
-              color: "#fff", // Hacemos el icono blanco para que resalte sobre el fondo oscuro
+              color: "#000",
             }}
           >
             <MenuIcon />
           </IconButton>
         )}
       </Toolbar>
+
+      {/* Drawer para Menú Lateral */}
+      <Drawer
+        anchor="right"
+        open={openMenu}
+        onClose={handleDrawerToggle}
+        sx={{
+          "& .MuiDrawer-paper": {
+            width: "250px",
+            padding: "20px",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+          role="presentation"
+        >
+          <IconButton
+            onClick={handleDrawerToggle}
+            sx={{ alignSelf: "flex-end", marginBottom: "10px" }}
+          >
+            <CloseIcon />
+          </IconButton>
+          <List>
+            {links.map((link, index) => (
+              <ListItem
+                key={index}
+                component={Link}
+                to={link.path}
+                onClick={handleDrawerToggle}
+                sx={{
+                  textAlign: "center",
+                  padding: "10px 0",
+                  fontWeight: "bold",
+                  position: "relative",
+                  "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: link.color,
+                    clipPath: link.shape,
+                    zIndex: -1,
+                    transition: "all 0.3s ease",
+                  },
+                  "&:hover::before": {
+                    transform: "scale(1.1)",
+                  },
+                }}
+              >
+                {link.name}
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
     </AppBar>
   );
 };

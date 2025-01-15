@@ -95,22 +95,32 @@ export const crearVehiculo = async (vehiculo) => {
 };
 
 export const obtenerCitasPorFechaYUsuario = async (fecha, idUsuario) => {
+  const url = `${API_URL}${BASE_PATH}Citas/buscarcita?fecha=${fecha}&idUsuario=${idUsuario}`;
+
   try {
-    const response = await fetch(
-      `${API_URL}${BASE_PATH}Citas/buscarcita?fecha=${fecha}&idUsuario=${idUsuario}`
-    );
+    const response = await fetch(url);
+
+    console.log("Estado de la respuesta:", response.status);
+    console.log("Encabezados de la respuesta:", response.headers);
 
     if (response.status === 204) {
+      console.log("No hay contenido (204).");
       return []; // Devuelve un array vacío si no hay citas
     }
 
+    // Manejar errores HTTP
     if (!response.ok) {
+      const errorText = await response.text(); // Capturar respuesta como texto
+      console.error("Error en la respuesta del servidor:", errorText);
       throw new Error(
         `Error al obtener citas: ${response.status} ${response.statusText}`
       );
     }
 
-    return await response.json();
+    // Intentar parsear como JSON
+    const data = await response.json();
+    console.log("Datos recibidos del backend:", data);
+    return data;
   } catch (error) {
     console.error("Error en obtenerCitasPorFechaYUsuario:", error);
     throw error;
