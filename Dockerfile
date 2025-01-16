@@ -10,6 +10,7 @@ RUN npm install --legacy-peer-deps
 
 # Copiar el resto del proyecto
 COPY . .
+COPY .env.production .env.production
 
 # Construir la aplicación para producción
 RUN npm install -g vite
